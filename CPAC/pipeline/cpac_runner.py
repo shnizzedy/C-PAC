@@ -168,7 +168,8 @@ def run_cpac_on_cluster(config_file, subject_list_file,
 
 # Run C-PAC subjects via job queue
 def run(subject_list_file, config_file=None, p_name=None, plugin=None,
-        plugin_args=None, tracking=True, num_subs_at_once=None, debug=False, test_config=False):
+        plugin_args=None, tracking=True, num_subs_at_once=None, debug=False,
+        test_config=False):
 
     # Import packages
     import commands
@@ -306,9 +307,12 @@ def run(subject_list_file, config_file=None, p_name=None, plugin=None,
 
     if tracking:
         try:
-            track_run(level='participant', participants=len(sublist))
+            track_run(
+                level='participant' if not test_config else 'test',
+                participants=len(sublist)
+            )
         except:
-            pass
+            print("Usage tracking failed for this run.")
 
     # If we're running on cluster, execute job scheduler
     if c.runOnGrid:
@@ -343,7 +347,7 @@ def run(subject_list_file, config_file=None, p_name=None, plugin=None,
                 prep_workflow(sub, c, True, pipeline_timing_info,
                               p_name, plugin, plugin_args, test_config)
             return
-                
+
         pid = open(os.path.join(c.workingDirectory, 'pid.txt'), 'w')
 
         # Init job queue
