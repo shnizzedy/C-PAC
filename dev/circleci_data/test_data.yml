@@ -1,0 +1,16 @@
+HNU:
+  s3: s3://fcp-indi/data/Projects/CORR/RawDataBIDS/HNU_1/
+  sessions: [0, 1]
+  subjects: [0, 1, 2, 3, 4]
+CBIC:
+  s3: s3://fcp-indi/data/Projects/HBN/MRI/Site-CBIC/
+  sessions: [0]
+  subjects: [0, 1, 2, 3, 4]
+Rockland:
+  s3: s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS/
+  sessions: ["ses-NFB3"]
+  subjects: ["sub-A00040524", "sub-A00040573", "sub-A00040623", "sub-A00040628", "sub-A00040640"]
+ADHD200:
+  s3: s3://fcp-indi/data/Projects/ADHD200/RawDataBIDS/KKI/
+  sessions: [0]
+  subjects: ["sub-1019436", "sub-2014113", "sub-3154996", "sub-3699991", "sub-3884955"]
