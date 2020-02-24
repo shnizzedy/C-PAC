@@ -1,8 +1,11 @@
+import os
+import random
 import yaml
 
 from indi_aws import fetch_creds
+from sys import argv
 
-bucket = fetch_creds.return_bucket(None, 'fcp-indi')
+# bucket = fetch_creds.return_bucket(None, 'fcp-indi')
 
 def getPrefix(url):
     """
@@ -40,10 +43,33 @@ def expand_possibilitities(d):
     ])
 
 
-def __main__():
+def main(test_to_run):
 
-    with open('test_data.yml', 'r') as f:
-        d = yaml.load(f, Loader=yaml.BaseLoader)
+    with open(
+        os.path.join(os.path.dirname(__file__), 'test_data.yml'),
+        'r'
+    ) as f:
+        # `test_subject` will be a tuple of (prefix, subject, session)
+        test_subject = random.choice(
+            expand_possibilitities(yaml.load(f, Loader=yaml.BaseLoader))
+        )
 
     # for obj in bucket.objects.filter(Prefix=getPrefix(url)):
     #     print(obj.key)
+
+    if isinstance(test_subject[1], int):
+        test_to_run = f"{test_to_run} --participant_ndx {test_subject[1]}"
+    else:
+        test_to_run = (
+            f"{test_to_run} --participant_label {test_subject[1].strip('sub-')}"
+        )
+    print(test_to_run)
+    return(test_to_run)
+
+
+def run():
+    main(argv)
+
+
+if __name__ == "__main__":
+    run()
