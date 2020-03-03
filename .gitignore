@@ -51,3 +51,4 @@ pip-log.txt
 cpac_runs/
 
 .DS_Store
+**/.ipynb_checkpoints
