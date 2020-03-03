@@ -4,13 +4,26 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run: docker build -t cpac:${CIRCLE_BRANCH//\//_} .
+      - run:
+          name: build
+          command: docker build -t cpac:${CIRCLE_BRANCH//\//_} .
+          # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
+          # taken to be the root directory of the workspace.
+          root: $HOME
+          # Must be relative path from root
+          paths:
+            - project
   heatmaps:
     machine: true
     steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: $HOME/workspace
       - run:
           name: ≟
-          command: pwd && ls && cd $HOME && ls && cd project && ls
+          command: pwd && ls && cd $HOME && ls && cd workspace && ls
           # python $HOME/project/dev/circleci_data/scripts/compare.py
   test:
     machine: true

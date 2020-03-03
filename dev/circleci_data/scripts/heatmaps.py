@@ -1,5 +1,6 @@
 import matplotlib as mpl
 import numpy as np
+import os
 import pandas as pd
 
 from matplotlib import gridspec as GS
