@@ -10,7 +10,8 @@ jobs:
     steps:
       - run:
           name: ≟
-          command: pwd && python $HOME/project/dev/circleci_data/scripts/compare.py
+          command: pwd && ls && cd $HOME && ls && cd project && ls
+          # python $HOME/project/dev/circleci_data/scripts/compare.py
   test:
     machine: true
     steps:
