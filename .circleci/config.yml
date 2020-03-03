@@ -5,6 +5,12 @@ jobs:
     steps:
       - checkout
       - run: docker build -t cpac:${CIRCLE_BRANCH//\//_} .
+  heatmaps:
+    machine: true
+    steps:
+      - run:
+          name: ≟
+          command: pwd && python $HOME/project/dev/circleci_data/scripts/compare.py
   test:
     machine: true
     steps:
@@ -18,9 +24,17 @@ workflows:
   build_and_test:
     jobs:
       - build
+      - heatmaps:
+          requires:
+            - build
+          filters:
+            branches:
+              only: feature/auto-heatmaps
       - test:
           requires:
             - build
           filters:
             branches:
-              ignore: upgrade/python3
+              ignore:
+                - feature/auto-heatmaps
+                - upgrade/python3
