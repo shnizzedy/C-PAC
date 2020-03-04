@@ -7,6 +7,100 @@ from matplotlib import gridspec as GS
 from matplotlib import pyplot as plt
 from scipy import io as sio
 
+
+def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
+                     textcolors=["black", "white"],
+                     threshold=None, **textkw):
+    """
+    A function to annotate a heatmap.
+
+    Parameters
+    ----------
+    im
+        The AxesImage to be labeled.
+    data
+        Data used to annotate.  If None, the image's data is used.  Optional.
+    valfmt
+        The format of the annotations inside the heatmap.  This should either
+        use the string format method, e.g. "$ {x:.2f}", or be a
+        `matplotlib.ticker.Formatter`.  Optional.
+    textcolors
+        A list or array of two color specifications.  The first is used for
+        values below a threshold, the second for those above.  Optional.
+    threshold
+        Value in data units according to which the colors from textcolors are
+        applied.  If None (the default) uses the middle of the colormap as
+        separation.  Optional.
+    **kwargs
+        All other arguments are forwarded to each call to `text` used to create
+        the text labels.
+    """
+    import matplotlib
+
+    if not isinstance(data, (list, np.ndarray)):
+        data = im.get_array()
+
+    # Normalize the threshold to the images color range.
+    if threshold is not None:
+        threshold = im.norm(threshold)
+    else:
+        threshold = im.norm(data.max())/2.
+
+    # Set default alignment to center, but allow it to be
+    # overwritten by textkw.
+    kw = dict(horizontalalignment="center",
+              verticalalignment="center")
+    kw.update(textkw)
+
+    # Get the formatter in case a string is supplied
+    if isinstance(valfmt, str):
+        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
+
+    # Loop over the data and create a `Text` for each "pixel".
+    # Change the text's color depending on the data.
+    texts = []
+    for i in range(data.shape[0]):
+        for j in range(data.shape[1]):
+            kw.update(color=textcolors[int(im.norm(data[i, j]) < threshold)])
+            text = im.axes.text(j, i, valfmt(data[i, j], None), fontsize=15, **kw)
+            texts.append(text)
+
+    return texts
+
+
+def generate_heatmap(corrs, var_list, sub_list, save_path=None):
+    """
+    Function to generate a heatmap.
+
+    Parameters
+    ----------
+    corrs: numpy ndarray with shape (number of features, number of subject_sessions)
+        This matrix contains the values to plot
+    var_list: list of strings
+        The labels, in order, of the features (rows)
+    sub_list: list of strings
+        The labels, in order, of the subject_sessions (columns)
+    save_path: string or falsy
+        The path to save the file to, or a falsy value to display in IPython
+
+    Returns
+    -------
+    None
+    """
+    fig, ax = plt.subplots(figsize = (50, 15))
+    im, cbar = heatmap(
+        corrs, var_list, sub_list, ax=ax, vmin=0, vmax=1,
+        cbarlabel="correlation score"
+    )
+    texts = annotate_heatmap(im)
+    fig.tight_layout()
+
+    if save_path:
+        plt.savefig(save_path)
+    else:
+        plt.show()
+
+
 def heatmap(data, row_labels, col_labels, ax=None,
             cbar_kw={}, cbarlabel="", **kwargs):
 
@@ -74,61 +168,22 @@ def heatmap(data, row_labels, col_labels, ax=None,
     return im, cbar
 
 
-def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
-                     textcolors=["black", "white"],
-                     threshold=None, **textkw):
+def reshape_corrs(correlation_matrix_path):
     """
-    A function to annotate a heatmap.
+    Function to reshape a given correlation matrix file to the shape expected by matplotlib.
 
-    Parameters
-    ----------
-    im
-        The AxesImage to be labeled.
-    data
-        Data used to annotate.  If None, the image's data is used.  Optional.
-    valfmt
-        The format of the annotations inside the heatmap.  This should either
-        use the string format method, e.g. "$ {x:.2f}", or be a
-        `matplotlib.ticker.Formatter`.  Optional.
-    textcolors
-        A list or array of two color specifications.  The first is used for
-        values below a threshold, the second for those above.  Optional.
-    threshold
-        Value in data units according to which the colors from textcolors are
-        applied.  If None (the default) uses the middle of the colormap as
-        separation.  Optional.
-    **kwargs
-        All other arguments are forwarded to each call to `text` used to create
-        the text labels.
+    Parameter
+    ---------
+    correlation_matrix_path: string
+
+    Returns
+    -------
+    numpy n-dimensional array in the shape of the heatmap (features, subject_sessions)
     """
-    import matplotlib
-
-    if not isinstance(data, (list, np.ndarray)):
-        data = im.get_array()
-
-    # Normalize the threshold to the images color range.
-    if threshold is not None:
-        threshold = im.norm(threshold)
-    else:
-        threshold = im.norm(data.max())/2.
-
-    # Set default alignment to center, but allow it to be
-    # overwritten by textkw.
-    kw = dict(horizontalalignment="center",
-              verticalalignment="center")
-    kw.update(textkw)
-
-    # Get the formatter in case a string is supplied
-    if isinstance(valfmt, str):
-        valfmt = matplotlib.ticker.StrMethodFormatter(valfmt)
-
-    # Loop over the data and create a `Text` for each "pixel".
-    # Change the text's color depending on the data.
-    texts = []
-    for i in range(data.shape[0]):
-        for j in range(data.shape[1]):
-            kw.update(color=textcolors[int(im.norm(data[i, j]) < threshold)])
-            text = im.axes.text(j, i, valfmt(data[i, j], None), fontsize=15, **kw)
-            texts.append(text)
-
-    return texts
+    return(
+        abs(np.transpose(
+            sio.loadmat(
+                correlation_matrix_path
+            )['corrs']
+        ))
+    )

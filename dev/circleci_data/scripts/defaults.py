@@ -1,3 +1,5 @@
+motion_list = ['FD']
+
 regressor_list = [
     'GS',
     'CSF',
@@ -9,4 +11,3 @@ regressor_list = [
     'aCompCor3',
     'aCompCor4'
 ]
-motion_list = ['FD']
