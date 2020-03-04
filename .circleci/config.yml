@@ -22,8 +22,7 @@ jobs:
           at: /home/circleci/
       - run:
           name: ≟
-          command: pwd && ls && cd $HOME && ls && cd workspace && ls
-          # python $HOME/project/dev/circleci_data/scripts/compare.py
+          command: python dev/circleci_data/scripts/compare.py
   test:
     machine: true
     steps:
