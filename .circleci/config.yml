@@ -26,6 +26,9 @@ jobs:
   test:
     machine: true
     steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
       - run:
           name: Run C-PAC
           command: docker run -i --rm -v $HOME:/output -v /tmp:/tmp cpac:${CIRCLE_BRANCH//\//_} s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS /output participant --participant_label A00028185 --pipeline_file /cpac_resources/pipe-test_ci.yml
@@ -36,17 +39,17 @@ workflows:
   build_and_test:
     jobs:
       - build
-      - heatmaps:
-          requires:
-            - build
-          filters:
-            branches:
-              only: feature/auto-heatmaps
       - test:
           requires:
             - build
           filters:
             branches:
               ignore:
-                - feature/auto-heatmaps
                 - upgrade/python3
+      - heatmaps:
+          requires:
+            - build
+            - test
+          filters:
+            branches:
+              only: feature/auto-heatmaps
