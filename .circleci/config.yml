@@ -52,8 +52,9 @@ workflows:
             - build
           filters:
             branches:
-              ignore:
-                - upgrade/python3
+              only:
+                - develop
+                - master
       - heatmaps:
           requires:
             - build
