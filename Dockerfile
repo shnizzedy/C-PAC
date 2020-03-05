@@ -95,7 +95,7 @@ RUN libs_path=/usr/lib/x86_64-linux-gnu && \
 ENV PATH=/opt/afni:$PATH
 
 # install FSL
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
       fsl-core \
       fsl-atlases \
       fsl-mni152-templates
