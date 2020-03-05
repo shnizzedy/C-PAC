@@ -1,0 +1,7 @@
+correlation_matrix: "/data3/cnl/fmriprep/benchmark_scripts/corrs.mat"
+subjects:
+  start: 25427
+  stop: 25456
+sessions:
+  start: 1
+  stop: 2

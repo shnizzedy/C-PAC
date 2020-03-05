@@ -1,12 +1,18 @@
+import argparse
 import matplotlib as mpl
 import numpy as np
 import os
 import pandas as pd
+import sys
+import yaml
 
 from matplotlib import gridspec as GS
 from matplotlib import pyplot as plt
 from scipy import io as sio
 
+import defaults
+
+from subjects import generate_subject_list_for_range
 
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=["black", "white"],
@@ -98,7 +104,11 @@ def generate_heatmap(corrs, var_list, sub_list, save_path=None):
     if save_path:
         plt.savefig(save_path)
     else:
-        plt.show()
+        try:
+            from IPython.display import display
+            plt.show()
+        except:
+            print("No save path or display configured")
 
 
 def heatmap(data, row_labels, col_labels, ax=None,
@@ -187,3 +197,87 @@ def reshape_corrs(correlation_matrix_path):
             )['corrs']
         ))
     )
+
+
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        description="generate heatmaps"
+    )
+
+    parser.add_argument(
+        'config',
+        help='path to a YAML configuration file specifying the data, '
+             'features and participants to plot'
+    )
+
+    parser.add_argument(
+        '-o', '--output',
+        dest='save_path',
+        help='path to save heatmap to',
+        required=False
+    )
+
+    parsed = vars(parser.parse_args(args[1:] if len(args)>1 else args))
+    return(parsed.pop('config'), parsed)
+
+
+def main(config_path, save_path=None):
+    print(save_path)
+    with open(config_path, 'r') as config_file:
+        config_settings = yaml.safe_load(config_file)
+    generate_heatmap(
+        reshape_corrs(
+            config_settings['correlation_matrix']
+        ) if 'correlation_matrix' in config_settings else
+        defaults.correlation_matrix,
+        var_list=config_settings[
+            'var_list'
+        ] if 'var_list' in config_settings else (
+            config_settings.get(
+                'regressor_list', []
+            ) + config_settings.get(
+                'motion_list',
+                []
+            )
+        ) if any([
+            l in config_settings for l in [
+                'regressor_list',
+                'motion_list'
+            ]
+        ]) else (
+            defaults.regressor_list + defaults.motion_list
+        ),
+        sub_list=generate_subject_list_for_range(
+            (
+                config_settings['subjects']['start'],
+                config_settings['subjects']['stop']
+            ) if all([
+                'subjects' in config_settings,
+                'start' in config_settings['subjects'],
+                'stop' in config_settings['subjects']
+            ]) else config_settings[
+                'subjects'
+            ] if 'subjects' in config_settings else (
+                defaults.subjects['start'],
+                defaults.subjects['stop']
+            ), (
+                config_settings['sessions']['start'],
+                config_settings['sessions']['stop']
+            ) if all([
+                'sessions' in config_settings,
+                'start' in config_settings['sessions'],
+                'stop' in config_settings['sessions']
+            ]) else config_settings[
+                'sessions'
+            ] if 'sessions' in config_settings else (
+                defaults.sessions['start'],
+                defaults.sessions['stop']
+            )
+        ),
+        save_path=save_path
+    )
+
+
+if __name__ == "__main__":
+    parsed = parse_args(sys.argv)
+    main(parsed[0], **parsed[1])
