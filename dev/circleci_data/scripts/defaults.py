@@ -1,6 +1,7 @@
 import numpy as np
 
 correlation_matrix = np.zeros((10,30))
+data_path = "/data3/cnl/fmriprep/HNUdata/HNU30/HNU_ses1"
 motion_list = ['FD']
 regressor_list = [
     'GS',

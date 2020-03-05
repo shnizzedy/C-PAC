@@ -1,0 +1,10 @@
+correlation_matrix: "/data3/cnl/auto-heatmaps/cpac_default/corrs.mat"
+data_path: "/data3/cnl/fmriprep/HNUdata/HNU30/HNU_ses1"
+benchmark_outputs: "/data3/cnl/fmriprep/AllNewRun/CPAC_1.6.2/cpac_default"
+this_run_outputs: "/data3/cnl/auto-heatmaps/cpac_default"
+subjects:
+  start: 25427
+  stop: 25456
+sessions:
+  start: 1
+  stop: 2
