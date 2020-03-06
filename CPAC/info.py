@@ -136,9 +136,9 @@ REQUIREMENTS        = [
     "click==6.7",
     "configparser==3.7.4",
     "cython==0.26",
-    "docker==4.2.0"
+    "docker==4.2.0",
     "future==0.16.0",
-    "GitPython==3.1.0"
+    "GitPython==3.1.0",
     "INDI-Tools==0.0.6",
     "lockfile==0.12.2",
     "matplotlib==2.0.2",
@@ -153,6 +153,7 @@ REQUIREMENTS        = [
     "prov==1.5.0",
     "psutil==5.4.6",
     "pygraphviz==1.3.1",
+    "pytest==5.3.5",
     "python-dateutil==2.7.3",
     "pyyaml==5.3",
     "scikit-learn==0.19.1",
