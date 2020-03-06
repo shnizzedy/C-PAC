@@ -52,7 +52,11 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - pytest
+      - pytest:
+          filters:
+            branches:
+              ignore:
+                - feature/auto-heatmaps
       - build:
           filters:
             branches:
