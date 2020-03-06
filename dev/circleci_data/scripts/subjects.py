@@ -1,3 +1,27 @@
+from string import ascii_lowercase
+
+
+def fmriprep_sub(sub):
+    """
+    Function to convert a string from f"sub-{sub_number}_ses-{ses_number}" to
+    f"sub-{sub_number}{ses_letter}"
+
+    Parameter
+    ---------
+    sub: str
+
+    Returns
+    -------
+    fmriprep_sub: str
+
+    Example
+    -------
+    >>> print(fmriprep_sub("sub-0025427_ses-1"))
+    sub-0025427a
+    """
+    return(f"{sub.split('_')[0]}{ascii_lowercase[int(sub[-1])-1]}")
+
+
 def generate_subject_list_for_range(subject_start_stop, session_start_stop=None):
     """
     Function to create a subject list for a given range. All values are inclusive.
