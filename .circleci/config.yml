@@ -1,6 +1,8 @@
 version: 2
 jobs:
   pytest:
+    docker:
+      - image: circleci/python:3.7
     steps:
       - checkout
       - run:
