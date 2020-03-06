@@ -1,5 +1,5 @@
 correlation_matrix: "/data3/cnl/auto-heatmaps/cpac_default/corrs.mat"
-data_path: "/data3/cnl/fmriprep/HNUdata/HNU30s"
+data_path: "/data3/cnl/fmriprep/HNUdata/HNU30"
 benchmark_outputs: "/data3/cnl/fmriprep/AllNewRun/CPAC_1.6.2/cpac_default"
 this_run_outputs: "/data3/cnl/auto-heatmaps/cpac_default"
 subjects:
