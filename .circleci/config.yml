@@ -2,7 +2,7 @@ version: 2
 jobs:
   pytest:
     docker:
-      - image: circleci/python:3.7
+      - image: fcpindi/c-pac:python3
     steps:
       - checkout
       - run:
@@ -52,7 +52,6 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - pytest
       - build:
           filters:
             branches:
@@ -73,3 +72,6 @@ workflows:
           filters:
             branches:
               only: feature/auto-heatmaps
+  unit_tests:
+    jobs:
+      - pytest
