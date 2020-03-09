@@ -64,12 +64,13 @@ def _expand_range(tuple_or_list):
     list
     """
     return(
-        range(
-            tuple_or_list[0],
-            tuple_or_list[1] + 1
-        ) if all([
-            isinstance(tuple_or_list, tuple),
-            len(tuple_or_list)==2,
-            *[isinstance(v, int) for v in tuple_or_list]
-        ]) else list(tuple_or_list)
+        list(
+            range(
+                tuple_or_list[0],
+                tuple_or_list[1] + 1) if all([
+                isinstance(tuple_or_list, tuple),
+                len(tuple_or_list)==2,
+                *[isinstance(v, int) for v in tuple_or_list]
+            ]) else tuple_or_list
+        )
     )

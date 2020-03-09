@@ -10,9 +10,9 @@ from matplotlib import gridspec as GS
 from matplotlib import pyplot as plt
 from scipy import io as sio
 
-import defaults
+from . import defaults
 
-from subjects import generate_subject_list_for_range
+from .subjects import generate_subject_list_for_range
 
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=["black", "white"],
@@ -167,7 +167,7 @@ def heatmap(data, row_labels, col_labels, ax=None,
              rotation_mode="anchor")
 
     # Turn spines off and create white grid.
-    for edge, spine in ax.spines.items():
+    for edge, spine in list(ax.spines.items()):
         spine.set_visible(False)
 
     ax.set_xticks(np.arange(data.shape[1]+1)-.5, minor=True)
