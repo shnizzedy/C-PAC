@@ -9,7 +9,7 @@ jobs:
           name: pytest
           command: |
             pip install pytest
-            pytest --doctest-ignore-import-errors --continue-on-collection-errors --doctest-modules --ignore=CPAC/cwas/tests/test_mdmr_cython.py
+            pytest --doctest-ignore-import-errors --continue-on-collection-errors --doctest-modules --ignore=CPAC/cwas/tests/test_mdmr_cython.py dev/circleci_data/
   build:
     machine: true
     steps:
@@ -52,11 +52,7 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - pytest:
-          filters:
-            branches:
-              ignore:
-                - feature/auto-heatmaps
+      - pytest
       - build:
           filters:
             branches:
