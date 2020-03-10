@@ -4,8 +4,12 @@ import pandas as pd
 import nibabel as nb
 import lib_afni1D as LAD
 import scipy.io as sio
+
 from scipy.stats import pearsonr
 from nipype.interfaces import afni, fsl
+
+from defaults import motion_list, regressor_list
+
 
 def main(argv):
     options = "hc:f:"
