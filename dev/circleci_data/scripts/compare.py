@@ -43,12 +43,15 @@ def calc_corr(data1, data2):
 
     data2: np.ndarray or list
     """
-    if isinstance(data1, np.ndarray) and data1.shape == data2.shape:
-        return(pearsonr(data1.flatten(), data2.flatten())[0])
-    elif len(data1) == len(data2):
-        return(pearsonr(data1, data2)[0])
-    else:
-        return(float(np.nan))
+    if not any([
+        data1 is None,
+        data2 is None
+    ]):
+        if isinstance(data1, np.ndarray) and data1.shape == data2.shape:
+            return(pearsonr(data1.flatten(), data2.flatten())[0])
+        if len(data1) == len(data2):
+            return(pearsonr(data1, data2)[0])
+    return(float(np.nan))
 
 
 class Subject_Session_Feature:
@@ -69,28 +72,32 @@ class Subject_Session_Feature:
         """
         self.subject = subject
         self.feature = feature
-        self.data = [
+        self.paths = (
+            self.get_path(
+                subject,
+                feature,
+                runs[0]["run_path"],
+                runs[0]["software"]
+            ),
+            self.get_path(
+                subject,
+                feature,
+                runs[1]["run_path"],
+                runs[1]["software"]
+            )
+        )
+        self.data = (
             self.read_feature(
-                self.get_path(
-                    subject,
-                    feature,
-                    runs[0]["run_path"],
-                    runs[0]["software"]
-                ),
+                self.paths[0],
                 feature,
                 runs[0]["software"]
             ),
             self.read_feature(
-                self.get_path(
-                    subject,
-                    feature,
-                    runs[1]["run_path"],
-                    runs[1]["software"]
-                ),
+                self.paths[1],
                 feature,
                 runs[1]["software"]
             )
-        ]
+        )
 
     def get_path(self, subject, feature, run_path, software="C-PAC"):
         """
@@ -253,7 +260,7 @@ class Correlation_Matrix:
     def run_pearsonsr(self):
         for i, subject in enumerate(self.data):
             for j, feature in enumerate(self.data[subject]):
-                self.run_correlation(i, j, self.data[subject][feature])
+                self.run_correlation(i, j, *self.data[subject][feature].data)
 
 if __name__ == "__main__":
     main(sys.argv)

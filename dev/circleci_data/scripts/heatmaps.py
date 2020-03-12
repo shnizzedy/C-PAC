@@ -9,10 +9,21 @@ import yaml
 from matplotlib import gridspec as GS
 from matplotlib import pyplot as plt
 from scipy import io as sio
+from warnings import filterwarnings
 
-from . import defaults
+if __package__ is None or __package__ == '':
+    import defaults
 
-from .subjects import generate_subject_list_for_range
+    from subjects import generate_subject_list_for_range
+
+else:
+    from . import defaults
+    from .subjects import generate_subject_list_for_range
+
+filterwarnings(
+    "ignore",
+    "Warning: converting a masked element to nan"
+)
 
 def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
                      textcolors=["black", "white"],
