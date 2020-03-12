@@ -2,7 +2,6 @@ C-PAC:
   1.6.2:
     default: cpac_default
     fmriprep: CPAC_1.6.2/cpac_fmriprep
-    on_nuisance_new: on_nuisance_new
 fmriprep:
   1: fmriprep_1
   2: fmriprep_2

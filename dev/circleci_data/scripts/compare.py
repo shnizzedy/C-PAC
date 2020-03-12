@@ -51,6 +51,10 @@ def calc_corr(data1, data2):
             return(pearsonr(data1.flatten(), data2.flatten())[0])
         if len(data1) == len(data2):
             return(pearsonr(data1, data2)[0])
+        if len(data1) == len(data2) + 1:
+            return(pearsonr(data1[1:], data2)[0])
+        if len(data2) == len(data1) + 1:
+            return(pearsonr(data1, data2[1:])[0])
     return(float(np.nan))
 
 
