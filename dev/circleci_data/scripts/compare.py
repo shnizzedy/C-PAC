@@ -1,4 +1,5 @@
 # coding=utf-8
+import argparse
 import glob
 import numpy as np
 import pandas as pd
@@ -6,28 +7,64 @@ import sys
 
 from afni_python.lib_afni1D import Afni1D
 from scipy.stats import pearsonr
+from tabulate import tabulate
 
 from defaults import motion_list, regressor_list
 from subjects import fmriprep_sub
 
 feature_headers = {
     'GS': {
+        'name': 'global signal regression',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#'
+                'global-signal-regression',
         'C-PAC': 'GlobalSignalMean0',
         'fmriprep': 'global_signal'
     },
     'CSF': {
+        'name': 'mean cerebrospinal fluid',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#'
+                'mean-white-matter-csf',
         'C-PAC': 'CerebrospinalFluidMean0',
         'fmriprep': 'csf'
     },
     'WM': {
+        'name': 'mean white matter',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#'
+                'mean-white-matter-csf',
         'C-PAC': 'WhiteMatterMean0',
         'fmriprep': 'white_matter'
     },
-    'CompCor': {
-        'C-PAC': 'CompCorPC',
-        'fmriprep': 'CompCor_comp_cor_0'
+    'aCompCor': {
+        'name': 'aCompCor',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#acompcor',
+        'C-PAC': 'aCompCorPC',
+        'fmriprep': 'aCompCor_comp_cor_0'
+    },
+    'tCompCor': {
+        'name': 'tCompCor',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#tcompcor',
+        'C-PAC': 'tCompCorPC',
+        'fmriprep': 'tCompCor_comp_cor_0'
+    },
+    'FD': {
+        'name': 'framewise displacement',
+        'link': 'https://fcp-indi.github.io/docs/user/nuisance.html#'
+                'regression-of-motion-parameters'
     }
 }
+sorted_keys = list(feature_headers.keys())
+sorted_keys.sort(key=str.lower)
+feat_def_table = tabulate(
+    [
+        [
+            key,
+            feature_headers[key].get('name'),
+            feature_headers[key].get('link')
+        ] for key in sorted_keys
+    ],
+    headers=["key", "feature name", "documentation link"]
+)
+del sorted_keys
 
 def main(argv):
     print('🔬 Test ≟.')
@@ -56,6 +93,18 @@ def calc_corr(data1, data2):
         if len(data2) == len(data1) + 1:
             return(pearsonr(data1, data2[1:])[0])
     return(float(np.nan))
+
+
+def parse_args(args):
+    parser = argparse.ArgumentParser(
+        description="Create a correlation matrix between two C-PAC output "
+                    "directories.\nThe following features currently have "
+                    "available definitions to calculate Pearson's "
+                    "\x1B[3mr\x1B[23m between C-PAC and fmriprep:\n\n"
+                    f"{feat_def_table}",
+        formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    return(parser.parse_args())
 
 
 class Subject_Session_Feature:
@@ -228,6 +277,7 @@ class Correlation_Matrix:
         """
         self.subjects = subject_sessions
         self.features = features
+        self.runs = runs
         self.data = {
             subject: {
                 feature: Subject_Session_Feature(
@@ -237,6 +287,45 @@ class Correlation_Matrix:
         }
         self.corrs = np.zeros((len(subject_sessions), len(features)))
         self.run_pearsonsr()
+
+    def print_filepaths(self, plaintext=False):
+        """
+        Function to print a table
+        """
+        columns = [self.runs[0]["software"], self.runs[1]["software"]]
+        path_table = pd.DataFrame(
+            [
+                self.data[sub][feat].paths for
+                sub in self.data for feat in self.data[sub]
+            ],
+            columns=columns,
+            index=[
+                f"{sub} {feat}" for sub in self.subjects for
+                feat in self.features
+            ]
+        )
+        if plaintext:
+            print(tabulate(
+                path_table,
+                headers=columns
+            ))
+        else:
+            stored_options = (
+                pd.options.display.max_rows,
+                pd.options.display.max_colwidth
+            )
+            pd.options.display.max_rows = 999
+            pd.options.display.max_colwidth = 1000
+            try:
+                from IPython.display import display
+                display(path_table)
+            except:
+                print(path_table)
+            (
+                pd.options.display.max_rows,
+                pd.options.display.max_colwidth
+            ) = stored_options
+            del stored_options
 
     def run_correlation(self, subject, feature, data1, data2):
         """
@@ -267,4 +356,5 @@ class Correlation_Matrix:
                 self.run_correlation(i, j, *self.data[subject][feature].data)
 
 if __name__ == "__main__":
-    main(sys.argv)
+    args = parse_args(sys.argv)
+    main(args)

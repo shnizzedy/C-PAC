@@ -85,7 +85,7 @@ def annotate_heatmap(im, data=None, valfmt="{x:.2f}",
     return texts
 
 
-def generate_heatmap(corrs, var_list, sub_list, save_path=None):
+def generate_heatmap(corrs, var_list, sub_list, save_path=None, title=None):
     """
     Function to generate a heatmap.
 
@@ -99,6 +99,8 @@ def generate_heatmap(corrs, var_list, sub_list, save_path=None):
         The labels, in order, of the subject_sessions (columns)
     save_path: string or falsy
         The path to save the file to, or a falsy value to display in IPython
+    title: str
+        String to use as plot title. Optional.
 
     Returns
     -------
@@ -110,6 +112,14 @@ def generate_heatmap(corrs, var_list, sub_list, save_path=None):
         cbarlabel="correlation score"
     )
     texts = annotate_heatmap(im)
+    if title:
+        plt.title(
+            label=title,
+            fontdict={
+                'fontsize': max(24, len(sub_list)*0.75),
+                'fontweight' : 'bold',
+            }
+        )
     fig.tight_layout()
 
     if save_path:
@@ -233,7 +243,6 @@ def parse_args(args):
 
 
 def main(config_path, save_path=None):
-    print(save_path)
     with open(config_path, 'r') as config_file:
         config_settings = yaml.safe_load(config_file)
     generate_heatmap(
