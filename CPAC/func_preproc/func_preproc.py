@@ -9,7 +9,7 @@ import nipype.interfaces.utility as util
 from nipype.interfaces import afni
 from nipype.interfaces.afni import preprocess
 from nipype.interfaces.afni import utils as afni_utils
-
+# from CPAC.anat_preproc import patch_cmass_output
 from CPAC.func_preproc.utils import add_afni_prefix, nullify
 from CPAC.utils.interfaces.function import Function
 from CPAC.generate_motion_statistics import motion_power_statistics
@@ -152,7 +152,7 @@ def anat_refined_mask(init_bold_mask = True, wf_name='init_bold_mask'):
 
 def normalize_motion_parameters(in_file):
     """
-    Convert FSL mcflirt motion params to AFNI space  
+    Convert FSL mcflirt motion parameters to AFNI space  
     """
     import os 
     import numpy as np
@@ -803,9 +803,11 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
                                                          'skullstrip',
                                                          'func_mean',
                                                          'preprocessed',
+                                                         'preprocessed_median',
                                                          'preprocessed_mask',
                                                          'slice_time_corrected',
-                                                         'transform_matrices']),
+                                                         'transform_matrices',
+                                                         'center_of_mass']),
                           name='outputspec')
 
     func_deoblique = pe.Node(interface=afni_utils.Refit(),
@@ -824,8 +826,26 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
     preproc.connect(func_deoblique, 'out_file',
                     func_reorient, 'in_file')
 
-    preproc.connect(func_reorient, 'out_file',
-                    output_node, 'reorient')
+    # TODO XL review forking
+    if 1 in config.gen_custom_template:
+        func_align_cmass = pe.Node(interface=afni.CenterMass(), name='cmass')
+        func_align_cmass.inputs.cm_file = os.path.join(
+            os.getcwd(), "center_of_mass.txt")
+        preproc.connect(func_reorient, 'out_file', func_align_cmass, 'in_file')
+        # have to hardcode that because nipype CenterMass outputs a list of tuples
+        # but the set_cm option take a tuple as input
+        patch = pe.Node(util.Function(input_names=['lst'],
+                        output_names=['tuple'],
+                        function=patch_cmass_output),
+                        name='patch_cmass')
+        preproc.connect(inputnode, 'template_cmass', patch, 'lst')
+        preproc.connect(patch, 'tuple', func_align_cmass, 'set_cm')
+        preproc.connect(func_align_cmass, 'cm',
+                        output_node, 'center_of_mass')
+        # Just add the alignment to the output image
+        preproc.connect(func_align_cmass, 'out_file', output_node, 'reorient')
+    else:
+        preproc.connect(func_reorient, 'out_file', output_node, 'reorient')
 
     func_motion_correct = pe.Node(interface=preprocess.Volreg(),
                                         name='func_generate_ref')
@@ -1024,6 +1044,20 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
 
     preproc.connect(func_normalize, 'out_file',
                     output_node, 'preprocessed')
+
+    # TODO XL review forking
+    if 1 in config.gen_custom_template:
+        func_get_preprocessed_median = pe.Node(interface=afni_utils.TStat(),
+                            name='func_get_preprocessed_median')
+
+        func_get_preprocessed_median.inputs.options = '-median'
+        func_get_preprocessed_median.inputs.outputtype = 'NIFTI_GZ'
+
+        preproc.connect(func_normalize, 'out_file',
+                        func_get_preprocessed_median, 'in_file')
+
+        preproc.connect(func_get_preprocessed_median, 'out_file',
+                    output_node, 'preprocessed_median')   
 
     func_mask_normalize = pe.Node(interface=fsl.ImageMaths(),
                                   name='func_mask_normalize')
