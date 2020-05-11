@@ -190,7 +190,7 @@ selector_renaming = {
 }
 
 selector_renaming_inverse = \
-    dict(zip(*zip(*selector_renaming.items())[::-1]))
+    dict(zip(*list(zip(*selector_renaming.items()))[::-1]))
 
 selector_summary_method_renaming = {
     'PC': 'Principal Components',
@@ -201,7 +201,7 @@ selector_summary_method_renaming = {
 }
 
 selector_summary_method_renaming_inverse = \
-    dict(zip(*zip(*selector_summary_method_renaming.items())[::-1]))
+    dict(zip(*list(zip(*selector_summary_method_renaming.items()))[::-1]))
 
 selector_derivatives_renaming = {
     'include_delayed': 'Include Delayed',
@@ -212,7 +212,7 @@ selector_derivatives_renaming = {
 }
 
 selector_derivatives_renaming_inverse = \
-    dict(zip(*zip(*selector_derivatives_renaming.items())[::-1]))
+    dict(zip(*list(zip(*selector_derivatives_renaming.items()))[::-1]))
 
 selector_censor_method_renaming = {
     'Interpolate': 'Interpolate',
@@ -222,7 +222,7 @@ selector_censor_method_renaming = {
 }
 
 selector_censor_method_renaming_inverse = \
-    dict(zip(*zip(*selector_censor_method_renaming.items())[::-1]))
+    dict(zip(*list(zip(*selector_censor_method_renaming.items()))[::-1]))
 
 
 class NuisanceRegressionRegressorEditor(wx.Frame):

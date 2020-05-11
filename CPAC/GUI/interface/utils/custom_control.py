@@ -1,5 +1,4 @@
 import wx
-import wx.combo
 import os
 from wx.lib.masked import NumCtrl
 from . import modelconfig_window, modelDesign_window, fsl_flame_presets_window
@@ -7,10 +6,10 @@ import wx.lib.agw.balloontip as BT
 import pkg_resources as p
 
 
-class FileSelectorCombo(wx.combo.ComboCtrl):
+class FileSelectorCombo(wx.ComboCtrl):
     def __init__(self, *args, **kw):
-        wx.combo.ComboCtrl.__init__(self, *args, **kw)
-        bmp = wx.BitmapFromImage(wx.Image(p.resource_filename('CPAC', \
+        wx.ComboCtrl.__init__(self, *args, **kw)
+        bmp = wx.Bitmap(wx.Image(p.resource_filename('CPAC', \
                                      'GUI/resources/images/folder3.gif')))
         self.SetButtonBitmaps(bmp, False)
 
@@ -36,10 +35,10 @@ class FileSelectorCombo(wx.combo.ComboCtrl):
         self.SetFocus()
 
 
-class FSLModelSelectorCombo(wx.combo.ComboCtrl):
+class FSLModelSelectorCombo(wx.ComboCtrl):
     def __init__(self, *args, **kw):
-        wx.combo.ComboCtrl.__init__(self, *args, **kw)
-        bmp = wx.BitmapFromImage(wx.Image(p.resource_filename('CPAC', \
+        wx.ComboCtrl.__init__(self, *args, **kw)
+        bmp = wx.Bitmap(wx.Image(p.resource_filename('CPAC', \
                                      'GUI/resources/images/folder3.gif')))
         self.SetButtonBitmaps(bmp, False)
 
@@ -66,11 +65,11 @@ class FSLModelSelectorCombo(wx.combo.ComboCtrl):
         self.SetFocus()
 
 
-class DirSelectorCombo(wx.combo.ComboCtrl):
+class DirSelectorCombo(wx.ComboCtrl):
 
     def __init__(self, *args, **kw):
-        wx.combo.ComboCtrl.__init__(self, *args, **kw)
-        bmp = wx.BitmapFromImage(wx.Image(p.resource_filename('CPAC', \
+        wx.ComboCtrl.__init__(self, *args, **kw)
+        bmp = wx.Bitmap(wx.Image(p.resource_filename('CPAC', \
                                      'GUI/resources/images/folder7.gif')))
         self.SetButtonBitmaps(bmp, False)
 
@@ -768,9 +767,9 @@ class ParametersCheckBox(wx.Frame):
 
 
 
-class TextBoxCombo(wx.combo.ComboCtrl):
+class TextBoxCombo(wx.ComboCtrl):
     def __init__(self, *args, **kw):
-        wx.combo.ComboCtrl.__init__(self, *args, **kw)
+        wx.ComboCtrl.__init__(self, *args, **kw)
         bmp = wx.Bitmap(p.resource_filename('CPAC', \
                                           'GUI/resources/images/plus12.jpg'),\
                                           wx.BITMAP_TYPE_ANY)
