@@ -1017,7 +1017,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                 raise Exception
 
             flirt_reg_anat_mni = create_fsl_flirt_linear_reg(
-                'anat_mni_flirt_register_%d' % num_strat
+                'anat_mni_flirt_register_{0}'.format(num_strat)
             )
 
             # Input registration parameters
@@ -1041,6 +1041,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                                       'outputspec.output_brain')
 
             strat.update_resource_pool({
+                'registration_method': 'FSL',
                 'anatomical_to_mni_linear_xfm': (flirt_reg_anat_mni, 'outputspec.linear_xfm'),
                 'mni_to_anatomical_linear_xfm': (flirt_reg_anat_mni, 'outputspec.invlinear_xfm'),
                 'anatomical_to_standard': (flirt_reg_anat_mni, 'outputspec.output_brain')
@@ -1061,10 +1062,10 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
             nodes = strat.get_nodes_names()
 
-            if 'anat_mni_flirt_register' in nodes:
+            if strat.get('registration_method') == 'FSL':
 
                 fnirt_reg_anat_mni = create_fsl_fnirt_nonlinear_reg(
-                    'anat_mni_fnirt_register_%d' % num_strat
+                    'anat_mni_fnirt_register_{0}'.format(num_strat)
                 )
 
                 node, out_file = strat['anatomical_brain']
@@ -1119,12 +1120,11 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
         # or run ANTS anatomical-to-MNI registration instead
         if 'ANTS' in c.regOption and \
-            'anat_mni_flirt_register' not in nodes and \
-                'anat_mni_fnirt_register' not in nodes:
+                strat.get('registration_method') != 'FSL':
 
             ants_reg_anat_mni = \
                 create_wf_calculate_ants_warp(
-                    'anat_mni_ants_register_%d' % num_strat,
+                    'anat_mni_ants_register_{0}'.format(num_strat),
                     num_threads=num_ants_cores,
                     reg_ants_skull = c.regWithSkull
                 )
@@ -1231,6 +1231,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                                       'outputspec.normalized_output_brain')
 
             strat.update_resource_pool({
+                'registration_method': 'ANTS',
                 'ants_initial_xfm': (ants_reg_anat_mni, 'outputspec.ants_initial_xfm'),
                 'ants_rigid_xfm': (ants_reg_anat_mni, 'outputspec.ants_rigid_xfm'),
                 'ants_affine_xfm': (ants_reg_anat_mni, 'outputspec.ants_affine_xfm'),
@@ -1253,7 +1254,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
             nodes = strat.get_nodes_names()
 
             if 'FSL' in c.regOption and \
-               'anat_mni_ants_register' not in nodes:
+                   strat.get('registration_method') != 'ANTS':
 
                 # this is to prevent the user from running FNIRT if they are
                 # providing already-skullstripped inputs. this is because
@@ -1272,7 +1273,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     raise Exception
 
                 flirt_reg_anat_symm_mni = create_fsl_flirt_linear_reg(
-                    'anat_symmetric_mni_flirt_register_%d' % num_strat
+                    'anat_symmetric_mni_flirt_register_{0}'.format(num_strat)
                 )
 
 
@@ -1321,7 +1322,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
                 nodes = strat.get_nodes_names()
 
-                if 'anat_mni_flirt_register' in nodes:
+                if strat.get('registration_method') == 'FSL':
                     fnirt_reg_anat_symm_mni = create_fsl_fnirt_nonlinear_reg(
                         'anat_symmetric_mni_fnirt_register_%d' % num_strat
                     )
