@@ -736,18 +736,32 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
     # update resource pool from data config
     # TODO fork resource pool
-    # TODO resume based on existing working dir
     if 'resource_pool' in sub_dict.keys():
         resource_pool_list = sub_dict['resource_pool']
         for strat in resource_pool_list.keys():
             resource_pool_dict = sub_dict['resource_pool'][strat]
             for key in resource_pool_dict.keys():
-                if 'anatomical' in key and key not in strat:
+                if 'anatomical_to_mni_nonlinear_xfm' in key:
                     longitudinal_flow = create_anat_datasource(f'{key}_gather_{num_strat}')
-                    longitudinal_flow.inputs.inputnode.subject = subject_id
-                    longitudinal_flow.inputs.inputnode.anat = resource_pool_dict[key]
-                    longitudinal_flow.inputs.inputnode.creds_path = input_creds_path
-                    longitudinal_flow.inputs.inputnode.dl_dir = c.workingDirectory
+                    longitudinal_flow.inputs.inputnode.set(
+                        subject = subject_id,
+                        anat = resource_pool_dict[key],
+                        creds_path = input_creds_path,
+                        dl_dir = c.workingDirectory,
+                        img_type = 'other'
+                    )
+                    strat_initial.update_resource_pool({
+                        key: (longitudinal_flow, 'outputspec.anat')
+                    })
+                elif ('anatomical' in key or 'seg' in key) and key not in strat:
+                    longitudinal_flow = create_anat_datasource(f'{key}_gather_{num_strat}')
+                    longitudinal_flow.inputs.inputnode.set(
+                        subject = subject_id,
+                        anat = resource_pool_dict[key],
+                        creds_path = input_creds_path,
+                        dl_dir = c.workingDirectory,
+                        img_type = 'anat'
+                    )
                     strat_initial.update_resource_pool({
                         key: (longitudinal_flow, 'outputspec.anat')
                     })
@@ -760,11 +774,14 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     })
 
     anat_flow = create_anat_datasource('anat_gather_%d' % num_strat)
-    anat_flow.inputs.inputnode.subject = subject_id
-    anat_flow.inputs.inputnode.anat = sub_dict['anat']
-    anat_flow.inputs.inputnode.creds_path = input_creds_path
-    anat_flow.inputs.inputnode.dl_dir = c.workingDirectory
-
+    anat_flow.inputs.inputnode.set(
+        subject = subject_id,
+        anat = sub_dict['anat'],
+        creds_path = input_creds_path,
+        dl_dir = c.workingDirectory,
+        img_type = 'anat'
+    )
+    
     strat_initial.update_resource_pool({
         'anatomical': (anat_flow, 'outputspec.anat')
     })
@@ -1553,8 +1570,8 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
             strat_list += new_strat_list
 
-    # Inserting Segmentation Preprocessing Workflow
-    workflow, strat_list = connect_anat_segmentation(workflow, strat_list, c)
+        # Inserting Segmentation Preprocessing Workflow
+        workflow, strat_list = connect_anat_segmentation(workflow, strat_list, c)
 
 
     # Functional / BOLD time
