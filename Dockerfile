@@ -117,6 +117,9 @@ RUN if [ -f /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1.2.0]; then \
     tcsh @update.afni.binaries -package linux_openmp_64 -bindir /opt/afni -prog_list $(cat /opt/required_afni_pkgs.txt) && \
     ldconfig
 
+# Link libraries for Singularity images
+RUN ldconfig
+
 # set up AFNI
 ENV PATH=/opt/afni:$PATH
 
@@ -234,5 +237,3 @@ RUN ldconfig
 RUN apt-get clean && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-RUN ldconfig
