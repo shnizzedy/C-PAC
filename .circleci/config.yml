@@ -108,7 +108,7 @@ jobs:
           command: python dev/circleci_data/scripts/compare.py
   habanero-rest-pipeline:
     machine: true
-    step:
+    steps:
       - attach_workspace:
           at: /home/circleci/
       - run:
