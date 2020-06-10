@@ -1450,7 +1450,7 @@ def create_nuisance_regression_workflow(nuisance_selectors,
     if nuisance_selectors.get('Censor'):
         if nuisance_selectors['Censor']['method'] == 'SpikeRegression':
             nuisance_wf.connect(find_censors, 'out_file',
-                                nuisance_regression, 'censor')
+                                nuisance_regression, 'censor_file_path')
         else:
             if nuisance_selectors['Censor']['method'] == 'Interpolate':
                 nuisance_regression.inputs.cenmode = 'NTRP'
@@ -1459,7 +1459,7 @@ def create_nuisance_regression_workflow(nuisance_selectors,
                     nuisance_selectors['Censor']['method'].upper()
 
             nuisance_wf.connect(find_censors, 'out_file',
-                                nuisance_regression, 'censor')
+                                nuisance_regression, 'censor_file_path')
 
     if nuisance_selectors.get('PolyOrt'):
         if not nuisance_selectors['PolyOrt'].get('degree'):
