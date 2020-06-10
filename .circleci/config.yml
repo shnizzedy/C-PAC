@@ -106,32 +106,32 @@ jobs:
       - run:
           name: ≟
           command: python dev/circleci_data/scripts/compare.py
-    habanero-rest-pipeline:
-      machine: true
-      step:
-        - attach_workspace:
-            at: /home/circleci/
-        - run:
-            name: Set up Singularity
-            command: |
-              sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
-              cd singularity
-              ./autogen.sh
-              ./configure --prefix=/usr/local --sysconfdir=/etc
-              make
-              sudo make install
-              cd ..
-        - run:
-            name: rest_test_CPACv1.6.2_nuis1-3a.yml
-            command: |
-              mkdir outputs
-              curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
-              run -H /home/circleci -B dev/circleci_data:/configs C-PAC-CI.simg /home/circleci /home/circleci/outputs participant --save_working_dir --data_config_file /configs/cpac_data_config_regtest.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 4 --mem_gb 12 --participant_ndx=1
-            no_output_timeout: 5h
-        - store_artifacts:
-            path: outputs/crash
-        - store_artifacts:
-            path: outputs/log
+  habanero-rest-pipeline:
+    machine: true
+    step:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            run -H /home/circleci -B dev/circleci_data:/configs C-PAC-CI.simg /home/circleci /home/circleci/outputs participant --save_working_dir --data_config_file /configs/cpac_data_config_regtest.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 4 --mem_gb 12 --participant_ndx=$((RANDOM % 25))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
   test:
     machine: true
     steps:
