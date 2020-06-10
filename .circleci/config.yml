@@ -209,7 +209,10 @@ workflows:
             - build
       - habanero-rest-pipeline:
           requires:
-            - build    
+            - build
+          filters:
+            branches:
+              ignore: Victor/timepoints-v-ROIs
       - victor-pipeline:
           requires:
             - build
