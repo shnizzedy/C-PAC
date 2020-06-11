@@ -124,7 +124,7 @@ jobs:
           command: |
             docker load < cpac-docker-image.tar.gz
             docker run -i --rm -v $HOME:/output -v /tmp:/tmp cpac:${CIRCLE_BRANCH//\//_} s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS /output participant --participant_label A00028185 --pipeline_file /cpac_resources/pipe-test_ci.yml
-          no_output_timeout: 3h
+          no_output_timeout: 5h
 
 workflows:
   version: 2
