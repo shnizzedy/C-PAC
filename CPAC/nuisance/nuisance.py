@@ -265,7 +265,7 @@ def gather_nuisance(functional_file_path,
 
         if not regressor_file:
             raise ValueError("Regressor type Censor specified in selectors but "
-                             "the corresponding file was not found!")
+                             f"the corresponding file was not found! {str(selector)}")
 
         try:
             censor_volumes = np.loadtxt(regressor_file)
