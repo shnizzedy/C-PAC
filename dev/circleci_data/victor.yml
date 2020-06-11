@@ -905,7 +905,7 @@ realignment : ['ROI_to_func']
 # Available analyses: ['Avg', 'Voxel', 'SpatialReg', 'PearsonCorr', 'PartialCorr'].
 # Denote which analyses to run for each ROI path by listing the names above. For example, if you wish to run Avg and SpatialReg, you would enter: '/path/to/ROI.nii.gz': Avg, SpatialReg
 tsa_roi_paths:
-    /cpac_templates/rois_3mm.nii.gz: Avg
+  - /cpac_templates/rois_3mm.nii.gz: Avg
     /ndmg_atlases/label/Human/Schaefer2018-1000-node_space-MNI152NLin6_res-1x1x1.nii.gz: Avg
     /ndmg_atlases/label/Human/Schaefer2018-200-node_space-MNI152NLin6_res-1x1x1.nii.gz: Avg
     /ndmg_atlases/label/Human/Schaefer2018-300-node_space-MNI152NLin6_res-1x1x1.nii.gz: Avg
