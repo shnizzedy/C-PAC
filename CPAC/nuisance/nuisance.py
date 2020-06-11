@@ -1396,7 +1396,7 @@ def create_nuisance_regression_workflow(nuisance_selectors,
 
         for threshold in censor_selector['thresholds']:
 
-            if 'type' not in threshold or threshold['type'] not in ['DVARS', 'FD_J', 'FD_P']:
+            if threshold.get('type') not in {'DVARS', 'FD_J', 'FD_P'}:
                 raise ValueError(
                     'Censoring requested, but with invalid threshold type.'
                 )
