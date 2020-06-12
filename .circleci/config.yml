@@ -1,36 +1,91 @@
 version: 2
 jobs:
-  pytest:
-    docker:
-      - image: fcpindi/c-pac:python3
+  pytest-docker:
+    machine: true
     steps:
-      - checkout
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
+      - run:
+          name: "Set Python Version"
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
       - run:
           name: Get Sample BIDS Data
           command: git clone https://github.com/bids-standard/bids-examples.git
       - run:
           name: pytest
           command: |
-            pip install -r dev/circleci_data/requirements.txt
-            coverage run -m pytest --junitxml=test-results/junit.xml --doctest-ignore-import-errors --continue-on-collection-errors --doctest-modules --ignore=CPAC/cwas/tests/test_mdmr_cython.py dev/circleci_data/
-            coverage report --include="./*" --omit="/home/circleci/.local/*"
-            coverage html
+            docker load < cpac-docker-image.tar.gz
+            docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
+            docker exec docker_test /bin/bash ./code/dev/circleci_data/test_in_image.sh
       - store_test_results:
           path: test-results
       - store_artifacts:
-          path: test-results
-      - store_artifacts:
           path: htmlcov
+          no_output_timeout: 5h
+  pytest-singularity:
+    machine: true
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
+      - run:
+          name: "Set Python Version"
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
+          name: test_install
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+            pip install -r dev/circleci_data/requirements.txt
+            coverage run -m pytest --junitxml=test-results/junit.xml --continue-on-collection-errors  dev/circleci_data/test_install.py
   build:
     machine: true
     steps:
       - checkout
       - run:
-          name: build
+          name: "Set Python Version"
           command: |
-            docker build -t cpac:${CIRCLE_BRANCH//\//_} .
-            docker save cpac:${CIRCLE_BRANCH//\//_} | gzip > cpac-docker-image.tar.gz
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
+          name: build-docker
+          command: |
+            docker build -t fcpindi/c-pac:${CIRCLE_BRANCH//\//_} .
+            docker save fcpindi/c-pac:${CIRCLE_BRANCH//\//_} | gzip > cpac-docker-image.tar.gz
           # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
+      - run:
+          name: local-registry
+          command: docker run -d -p 5000:5000 --restart=always --name registry registry:2
+      - run:
+          name: build-singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            git clone -b 2.5.2 https://github.com/sylabs/singularity
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+            docker load < cpac-docker-image.tar.gz
+            docker tag fcpindi/c-pac:${CIRCLE_BRANCH//\//_} localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
+            docker push localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
+            SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI.simg docker://localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_} 
+      - store_artifacts:
+          path: cpac-docker-image.tar.gz
+      - store_artifacts:
+          path: C-PAC-CI.simg
+          destination: cpac-singularity-image.simg
       - persist_to_workspace:
           # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is
           # taken to be the root directory of the workspace.
@@ -44,8 +99,221 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
+          name: "Set Python Version"
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
           name: ≟
           command: python dev/circleci_data/scripts/compare.py
+  default-pipeline:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B dev/docker_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  anat-only:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig anat-only --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  preproc:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig preproc --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  ndmg:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig ndmg --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  fmriprep-options:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig fmriprep-options --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  benchmark-ANTS:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig benchmark-ANTS --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  benchmark-FNIRT:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --preconfig benchmark-FNIRT --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  habanero-rest-pipeline:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Set up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          command: |
+            mkdir outputs
+            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
+            singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
+          no_output_timeout: 5h
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
   test:
     machine: true
     steps:
@@ -53,11 +321,16 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
+          name: "Set Python Version"
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
           name: Run C-PAC
           command: |
             docker load < cpac-docker-image.tar.gz
             docker run -i --rm -v $HOME:/output -v /tmp:/tmp cpac:${CIRCLE_BRANCH//\//_} s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS /output participant --participant_label A00028185 --pipeline_file /cpac_resources/pipe-test_ci.yml
-          no_output_timeout: 3h
+          no_output_timeout: 5h
 
 workflows:
   version: 2
@@ -84,6 +357,33 @@ workflows:
           filters:
             branches:
               only: feature/auto-heatmaps
-  unit_tests:
-    jobs:
-      - pytest
+      - pytest-docker:
+          requires:
+            - build
+      - pytest-singularity:
+          requires:
+            - build
+      - default-pipeline:
+          requires:
+            - build
+      - anat-only:
+          requires:
+            - build
+      - preproc:
+          requires:
+            - build
+      - ndmg:
+          requires:
+            - build
+      - fmriprep-options:
+          requires:
+            - build
+      - benchmark-ANTS:
+          requires:
+            - build
+      - benchmark-FNIRT:
+          requires:
+            - build
+      - habanero-rest-pipeline:
+          requires:
+            - build
