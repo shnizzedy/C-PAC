@@ -258,13 +258,25 @@ def gather_nuisance(functional_file_path,
 
     # Add spike regressors
     if selector.get('Censor', {}).get('method') == 'SpikeRegression':
+        s2 = {'functional_file_path': functional_file_path,
+              'selector': selector,
+              'grey_matter_summary_file_path': grey_matter_summary_file_path,
+              'white_matter_summary_file_path': white_matter_summary_file_path,
+              'csf_summary_file_path': csf_summary_file_path,
+              'acompcor_file_path': acompcor_file_path,
+              'tcompcor_file_path': tcompcor_file_path,
+              'global_summary_file_path': global_summary_file_path,
+              'motion_parameters_file_path': motion_parameters_file_path,
+              'custom_file_paths': custom_file_paths,
+              'censor_file_path': censor_file_path}
+        
         selector = selector['Censor']
 
         regressor_file = censor_file_path
 
         if not regressor_file:
             raise ValueError("Regressor type Censor specified in selectors but "
-                             "the corresponding file was not found!")
+                             f"the corresponding file was not found!{str(s2)}")
 
         try:
             censor_volumes = np.loadtxt(regressor_file)
