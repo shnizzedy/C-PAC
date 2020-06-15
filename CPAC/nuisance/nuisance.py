@@ -258,15 +258,13 @@ def gather_nuisance(functional_file_path,
 
     # Add spike regressors
     if selector.get('Censor', {}).get('method') == 'SpikeRegression':
-        s2 = selector
-
         selector = selector['Censor']
 
         regressor_file = censor_file_path
 
         if not regressor_file:
             raise ValueError("Regressor type Censor specified in selectors but "
-                             f"the corresponding file was not found! {str(s2)}")
+                             "the corresponding file was not found!")
 
         try:
             censor_volumes = np.loadtxt(regressor_file)
@@ -576,8 +574,8 @@ def create_regressor_workflow(nuisance_selectors,
     High Level Workflow Graph:
 
     .. exec::
-        from CPAC.nuisance import create_nuisance_workflow
-        wf = create_nuisance_workflow({
+        from CPAC.nuisance import create_nuisance_regression_workflow
+        wf = create_nuisance_regression_workflow({
             'PolyOrt': {'degree': 2},
             'tCompCor': {'summary': {'method': 'PC', 'components': 5}, 'threshold': '1.5SD', 'by_slice': True},
             'aCompCor': {'summary': {'method': 'PC', 'components': 5}, 'tissues': ['WhiteMatter', 'CerebrospinalFluid'], 'extraction_resolution': 2},
