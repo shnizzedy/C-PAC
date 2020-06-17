@@ -154,10 +154,19 @@ jobs:
             curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
             singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
           no_output_timeout: 5h
+      - run:
+          name: Tape archive
+          command: |
+            tar -zcvf outputs/working.tar.gz outputs/working
+            tar -zcvf outputs/output.tar.gz outputs/output
       - store_artifacts:
           path: outputs/crash
       - store_artifacts:
           path: outputs/log
+      - store_artifacts:
+          path: outputs/output.tar.gz
+      - store_artifacts:
+          path: outputs/working.tar.gz
   test:
     machine: true
     steps:
