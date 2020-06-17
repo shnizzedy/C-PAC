@@ -7,6 +7,7 @@ import shutil
 import pickle
 import copy
 import json
+import sys
 
 import pandas as pd
 import pkg_resources as p
@@ -621,6 +622,9 @@ CPAC run error:
                     except:
                         logger.warn('Could not remove working directory %s',
                                     working_dir)
+                
+                if "run error" in execution_info:
+                    sys.exit(1)
 
 
 def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1):
