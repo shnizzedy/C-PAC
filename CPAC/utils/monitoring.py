@@ -23,8 +23,14 @@ def recurse_nodes(workflow, prefix=''):
             }
 
 
-def log_nodes_initial(workflow):
+def log_nodes_initial(workflow, log_dir):
     logger = logging.getLogger('callback')
+    workflow.write_graph(
+        graph2use='colored', dotfilename='./log_dir/graph_colored.dot'
+    )
+    workflow.write_graph(
+        graph2use='flat', dotfilename='./log_dir/graph_flat.dot'
+    )
     for node in recurse_nodes(workflow):
         logger.debug(json.dumps(node))
 

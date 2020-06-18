@@ -396,7 +396,7 @@ Please, make yourself aware of how it works and its assumptions:
             cb_logger.addHandler(handler)
 
             # Log initial information from all the nodes
-            log_nodes_initial(workflow)
+            log_nodes_initial(workflow, log_dir)
 
             # Add status callback function that writes in callback log
             if nipype.__version__ not in ('1.1.2'):
