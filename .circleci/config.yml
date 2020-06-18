@@ -129,6 +129,32 @@ jobs:
           path: outputs/crash
       - store_artifacts:
           path: outputs/log
+  pytest-default-pipeline:
+    machine: true
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
+      - run:
+          name: Setting Python Version
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
+          name: Get Sample BIDS Data
+          command: git clone https://github.com/bids-standard/bids-examples.git
+      - run:
+          name: Running Pytest with Default Pipeline
+          command: |
+            mkdir /home/citcleci/project/outputs
+            docker load < cpac-docker-image.tar.gz
+            docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
+            docker exec docker_test /bin/bash ./code/dev/circleci_data/test_in_docker/test_full_run.sh default $((RANDOM % 20))
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: htmlcov
+          no_output_timeout: 5h
   anat-only:
     machine: true
     steps:
@@ -152,6 +178,32 @@ jobs:
           path: outputs/crash
       - store_artifacts:
           path: outputs/log
+  pytest-anat-only:
+    machine: true
+    steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
+      - run:
+          name: Setting Python Version
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+      - run:
+          name: Get Sample BIDS Data
+          command: git clone https://github.com/bids-standard/bids-examples.git
+      - run:
+          name: Running Pytest with Default Pipeline
+          command: |
+            mkdir /home/citcleci/project/outputs
+            docker load < cpac-docker-image.tar.gz
+            docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
+            docker exec docker_test /bin/bash ./code/dev/circleci_data/test_in_docker/test_full_run.sh anat-only $((RANDOM % 20))
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: htmlcov
+          no_output_timeout: 5h
   preproc:
     machine: true
     steps:
@@ -335,5 +387,11 @@ workflows:
           requires:
             - build
       - benchmark-FNIRT:
+          requires:
+            - build
+      - pytest-anat-only:
+          requires:
+            - build
+      - pytest-default-pipeline:
           requires:
             - build
