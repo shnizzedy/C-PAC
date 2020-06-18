@@ -7,15 +7,15 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
-          name: "Set Python Version"
+          name: 🐍 Setting Python Version
           command: |
             pyenv install 3.6.3
             pyenv global 3.6.3
       - run:
-          name: Get Sample BIDS Data
+          name: 🖴 Getting Sample BIDS Data
           command: git clone https://github.com/bids-standard/bids-examples.git
       - run:
-          name: pytest
+          name: 🔬 Running Unit Tests in Docker
           command: |
             docker load < cpac-docker-image.tar.gz
             docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
@@ -32,12 +32,12 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
-          name: "Set Python Version"
+          name: 🐍 Setting Python Version
           command: |
             pyenv install 3.6.3
             pyenv global 3.6.3
       - run:
-          name: test_install
+          name: 🔬 Testing Singularity Build
           command: |
             sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
             cd singularity
@@ -53,21 +53,21 @@ jobs:
     steps:
       - checkout
       - run:
-          name: "Set Python Version"
+          name: 🐍 Setting Python Version
           command: |
             pyenv install 3.6.3
             pyenv global 3.6.3
       - run:
-          name: build-docker
+          name: 🐳 Building Docker Image
           command: |
             docker build -t fcpindi/c-pac:${CIRCLE_BRANCH//\//_} .
             docker save fcpindi/c-pac:${CIRCLE_BRANCH//\//_} | gzip > cpac-docker-image.tar.gz
           # Persist the specified paths (workspace/echo-output) into the workspace for use in downstream job.
       - run:
-          name: local-registry
+          name: 🐳 Start Local Docker Registry
           command: docker run -d -p 5000:5000 --restart=always --name registry registry:2
       - run:
-          name: build-singularity
+          name: Ⓢ Build Singularity Image
           command: |
             sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
             git clone -b 2.5.2 https://github.com/sylabs/singularity
@@ -99,7 +99,7 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
-          name: "Set Python Version"
+          name: 🐍 Setting Python Version
           command: |
             pyenv install 3.6.3
             pyenv global 3.6.3
@@ -112,7 +112,7 @@ jobs:
       - attach_workspace:
           at: /home/circleci/
       - run:
-          name: Set up Singularity
+          name: Ⓢ Setting Up Singularity
           command: |
             sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
             cd singularity
@@ -122,7 +122,7 @@ jobs:
             sudo make install
             cd ..
       - run:
-          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          name: 🔬 Running Default Pipeline Config On a Random Subject
           command: |
             mkdir outputs
             curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
@@ -138,7 +138,7 @@ jobs:
       - attach_workspace:
           at: /home/circleci/
       - run:
-          name: Set up Singularity
+          name: Ⓢ Setting Up Singularity
           command: |
             sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
             cd singularity
@@ -148,14 +148,14 @@ jobs:
             sudo make install
             cd ..
       - run:
-          name: rest_test_CPACv1.6.2_nuis1-3a.yml
+          name: 🔬 Running Habanero Pipeline Config On a Random Subject
           command: |
             mkdir outputs
             curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
             singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
           no_output_timeout: 5h
       - run:
-          name: Tape archive
+          name: 🖭 Tape Archiving Working & Output Directories
           command: |
             tar -zcvf outputs/working.tar.gz outputs/working
             tar -zcvf outputs/output.tar.gz outputs/output
@@ -174,12 +174,12 @@ jobs:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
       - run:
-          name: "Set Python Version"
+          name: 🐍 Setting Python Version
           command: |
             pyenv install 3.6.3
             pyenv global 3.6.3
       - run:
-          name: Run C-PAC
+          name: 🔬 Running C-PAC
           command: |
             docker load < cpac-docker-image.tar.gz
             docker run -i --rm -v $HOME:/output -v /tmp:/tmp cpac:${CIRCLE_BRANCH//\//_} s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS /output participant --participant_label A00028185 --pipeline_file /cpac_resources/pipe-test_ci.yml
