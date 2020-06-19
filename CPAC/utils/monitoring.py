@@ -9,6 +9,7 @@ import socketserver
 import networkx as nx
 import nipype.pipeline.engine as pe
 
+from warnings import warn
 
 # Log initial information from all the nodes
 def recurse_nodes(workflow, prefix=''):
@@ -25,12 +26,15 @@ def recurse_nodes(workflow, prefix=''):
 
 def log_nodes_initial(workflow, log_dir):
     logger = logging.getLogger('callback')
-    workflow.write_graph(
-        graph2use='colored', dotfilename='./log_dir/graph_colored.dot'
-    )
-    workflow.write_graph(
-        graph2use='flat', dotfilename='./log_dir/graph_flat.dot'
-    )
+    # try:
+    #     workflow.write_graph(
+    #         graph2use='colored', dotfilename='./log_dir/graph_colored.dot'
+    #     )
+    #     workflow.write_graph(
+    #         graph2use='flat', dotfilename='./log_dir/graph_flat.dot'
+    #     )
+    # except (RuntimeError, SyntaxError) as e:
+    #     warn(e, SyntaxWarning, 2)
     for node in recurse_nodes(workflow):
         logger.debug(json.dumps(node))
 
