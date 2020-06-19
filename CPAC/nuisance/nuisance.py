@@ -593,12 +593,12 @@ def create_regressor_workflow(nuisance_selectors,
             dotfilename='./images/generated/nuisance.dot'
         )
 
-    .. image:: ../images/generated/nuisance.png
+    .. image:: ./images/generated/nuisance.png
        :width: 1000
 
     Detailed Workflow Graph:
 
-    .. image:: ../images/generated/nuisance_detailed.png
+    .. image:: ./images/generated/nuisance_detailed.png
        :width: 1000
 
     """

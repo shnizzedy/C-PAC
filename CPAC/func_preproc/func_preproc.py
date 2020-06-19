@@ -748,12 +748,12 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
 
     High Level Workflow Graph:
 
-    .. image:: ../images/generated/func_preproc.png
+    .. image:: ./images/generated/func_preproc.png
        :width: 1000
 
     Detailed Workflow Graph:
 
-    .. image:: ../images/generated/func_preproc_detailed.png
+    .. image:: ./images/generated/func_preproc_detailed.png
        :width: 1000
 
     Examples
