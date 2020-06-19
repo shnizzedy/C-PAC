@@ -1,12 +1,14 @@
 import os
 import sys
 
-sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), f'{os.pardir}/'*3
-)))
 from unittest import mock
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), f'{os.pardir}/'*3, 'dev', 'docker_data'
+)))
 
-from dev.docker_data import run
+import run
+# This script is intended to be run in a Docker container via the shell script
+# `test_full_run.sh`. Running in other ways may have unexpected results.
 
 def test_run_one_subject(capsys, participant_ndx, pipeline):
     # create the output directory if it doesn't exist yet
