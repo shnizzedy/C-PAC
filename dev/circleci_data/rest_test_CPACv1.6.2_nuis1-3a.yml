@@ -832,7 +832,7 @@ Regressors :
       method: Interpolate
       thresholds: 
          - type: FD_P
-           value: 0.5
+           value: 0.4
       number_of_previous_trs_to_censor: 1
       number_of_subsequent_trs_to_censor: 2
    
