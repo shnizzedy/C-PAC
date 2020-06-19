@@ -5,7 +5,7 @@ from unittest import mock
 CPAC_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), f'{os.pardir}/'*3)
 )
-sys.path.append(CPAC_DIR, 'dev', 'docker_data')
+sys.path.append(os.path.join(CPAC_DIR, 'dev', 'docker_data'))
 
 import run
 # This script is intended to be run in a Docker container via the shell script
