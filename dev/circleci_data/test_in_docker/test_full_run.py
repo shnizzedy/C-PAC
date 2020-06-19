@@ -2,9 +2,10 @@ import os
 import sys
 
 from unittest import mock
-sys.path.append(os.path.abspath(os.path.join(
-    os.path.dirname(__file__), f'{os.pardir}/'*3, 'dev', 'docker_data'
-)))
+CPAC_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), f'{os.pardir}/'*3)
+)
+sys.path.append(CPAC_DIR, 'dev', 'docker_data')
 
 import run
 # This script is intended to be run in a Docker container via the shell script
@@ -19,8 +20,14 @@ def test_run_one_subject(capsys, participant_ndx, pipeline):
         'run', '/home/circleci/project',
         f'/home/circleci/project/outputs/{pipeline}', 'participant',
         '--save_working_dir', '--data_config_file',
-        '/test_configs/data-test_4-projects_5-subjects.yml', *([
-            '--pipeline_file', '/configs/default_pipeline.yml'
+        os.path.join(
+            CPAC_DIR,
+            'CPAC/resources/configs/test_configs',
+            'data-test_4-projects_5-subjects.yml'
+        ), *([
+            '--pipeline_file', os.path.join(
+                CPAC_DIR,'dev/docker_data/default_pipeline.yml'
+            )
         ] if pipeline == 'default' else [
             '--preconfig', pipeline
         ]), '--n_cpus', '1', '--mem_gb', '12', '--participant_ndx',
