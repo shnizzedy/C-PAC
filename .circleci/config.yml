@@ -399,30 +399,57 @@ workflows:
       - pytest-docker:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - pytest-singularity:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - default-pipeline:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - anat-only:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - preproc:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - ndmg:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - fmriprep-options:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - benchmark-ANTS:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - benchmark-FNIRT:
           requires:
             - build
+          filters:
+            branches:
+              ignore: feature/CI-test-preconfigs
       - pytest-anat-only:
           requires:
             - build
