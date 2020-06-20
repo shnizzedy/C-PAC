@@ -178,6 +178,7 @@ jobs:
             docker load < cpac-docker-image.tar.gz
             docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
             docker exec docker_test /bin/bash ./code/dev/circleci_data/test_in_docker/test_full_run.sh default $((RANDOM % 20))
+          no_output_timeout: 5h
       - store_test_results:
           path: test-results
       - persist_to_workspace:
@@ -230,6 +231,7 @@ jobs:
             docker load < cpac-docker-image.tar.gz
             docker run -dit -P -v /home/circleci/project/test-results:/code/test-results -v /home/circleci/project/htmlcov:/code/htmlcov --entrypoint=/bin/bash --name docker_test fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
             docker exec docker_test /bin/bash ./code/dev/circleci_data/test_in_docker/test_full_run.sh anat-only $((RANDOM % 20))
+          no_output_timeout: 5h
       - store_test_results:
           path: test-results
       - persist_to_workspace:
