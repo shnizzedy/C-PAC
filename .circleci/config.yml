@@ -158,6 +158,32 @@ jobs:
           command: tar -zcvf outputs.tar.gz outputs
       - store_artifacts:
           path: outputs.tar.gz
+  habanero-rest-pipeline-singularity-0.4:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: Ⓢ Setting Up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
+      - run:
+          name: 🔬 Running Habanero Pipeline Config in Singularity On a Random Subject
+          command: |
+            mkdir outputs
+            singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a-lower-thresh.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
+          no_output_timeout: 5h
+      - run:
+          name: 🖭 Tape Archiving Output Directories
+          command: tar -zcvf outputs.tar.gz outputs
+      - store_artifacts:
+          path: outputs.tar.gz
   habanero-rest-pipeline-docker:
     machine: true
     steps:
@@ -169,6 +195,23 @@ jobs:
             mkdir outputs
             docker load < cpac-docker-image.tar.gz
             docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v dev/circleci_data:/configs -v CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
+          no_output_timeout: 5h
+      - run:
+          name: 🖭 Tape Archiving Output Directories
+          command: tar -zcvf outputs.tar.gz outputs
+      - store_artifacts:
+          path: outputs.tar.gz
+  habanero-rest-pipeline-docker-0.4:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: 🔬 Running Habanero Pipeline Config in Docker On a Random Subject
+          command: |
+            mkdir outputs
+            docker load < cpac-docker-image.tar.gz
+            docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/circleci_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a-lower-thresh.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
           no_output_timeout: 5h
       - run:
           name: 🖭 Tape Archiving Output Directories
@@ -228,5 +271,11 @@ workflows:
           requires:
             - build
       - habanero-rest-pipeline-docker:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-0.4:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-0.4:
           requires:
             - build
