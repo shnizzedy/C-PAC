@@ -68,12 +68,12 @@ jobs:
           background: true
       - run:
           name: 😴 Sleeping
-          command: sleep 2000
+          command: sleep 2000 && pkill singularity
+          no_output_timeout: 5h
           when: always
       - run:
           name: 🔬 Switching to Docker
           command: |
-            pkill singularity
             docker load < cpac-docker-image.tar.gz
             docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/docker_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$PARTICIPANT_NDX
           no_output_timeout: 5h
