@@ -63,10 +63,8 @@ jobs:
           name: 🔬 Starting in Singularity
           command: |
             mkdir outputs
-            PARTICIPANT_NDX=$((RANDOM % 20))
-            echo "export PARTICIPANT_NDX" >> $BASH_ENV
-            source $BASH_ENV
-            singularity run -H /home/circleci/project -B dev/docker_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx $PARTICIPANT_NDX &
+            echo $((RANDOM % 20)) > participant_ndx.txt
+            singularity run -H /home/circleci/project -B dev/docker_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx $(cat participant_ndx.txt) &
           background: true
       - run:
           name: 😴 Sleeping
@@ -77,7 +75,7 @@ jobs:
           name: 🔬 Switching to Docker
           command: |
             docker load < cpac-docker-image.tar.gz
-            docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/docker_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx=${PARTICIPANT_NDX}
+            docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/docker_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$(cat participant_ndx.txt)
           no_output_timeout: 5h
           when: always
       - run:
