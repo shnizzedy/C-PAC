@@ -64,11 +64,12 @@ jobs:
           command: |
             mkdir outputs
             PARTICIPANT_NDX=$((RANDOM % 20))
+            echo "export PARTICIPANT_NDX" >> $BASH_ENV
             singularity run -H /home/circleci/project -B dev/docker_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx $PARTICIPANT_NDX &
           background: true
       - run:
           name: 😴 Sleeping
-          command: sleep 2000 && pkill singularity
+          command: sleep 1000 && pkill singularity
           no_output_timeout: 5h
           when: always
       - run:
