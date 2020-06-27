@@ -1,0 +1,3 @@
+mkdir outputs
+docker load < cpac-docker-image.tar.gz
+docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/circleci_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=${1}

@@ -1,0 +1,2 @@
+mkdir outputs
+singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=${1}

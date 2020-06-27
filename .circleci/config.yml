@@ -1,4 +1,65 @@
-version: 2
+version: 2.1
+commands:
+  habanero-rest-pipeline-docker:
+    parameters:
+      participant_ndx:
+        type: integer
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - run:
+          name: 🔬 Running Habanero Pipeline Config in Docker On Subject << parameters.participant_ndx >>
+          command: /home/circleci/project/dev/circleci_data/runscripts/look_for_success.sh /home/circleci/project/dev/circleci_data/runscripts/docker_participant.sh << parameters.participant_ndx >>
+          no_output_timeout: 5h
+      - run:
+          name: 🖭 Tape Archiving Output Directories
+          command: tar -zcvf outputs.tar.gz outputs
+      - store_artifacts:
+          path: outputs.tar.gz
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  habanero-rest-pipeline-singularity:
+    parameters:
+      participant_ndx:
+        type: integer
+    steps:
+      - attach_workspace:
+          at: /home/circleci/
+      - set_up_singularity
+      - run:
+          name: 🔬 Running Habanero Pipeline Config in Singularity On Subject << parameters.participant_ndx >>
+          command: /home/circleci/project/dev/circleci_data/runscripts/look_for_success.sh /home/circleci/project/dev/circleci_data/runscripts/singularity_participant.sh << parameters.participant_ndx >>
+          no_output_timeout: 5h
+      - run:
+          name: 🖭 Tape Archiving Output Directories
+          command: tar -zcvf outputs.tar.gz outputs
+      - store_artifacts:
+          path: outputs.tar.gz
+      - store_artifacts:
+          path: outputs/crash
+      - store_artifacts:
+          path: outputs/log
+  set_python_version:
+    steps:
+      - run:
+          name: 🐍 Setting Python Version
+          command: |
+            pyenv install 3.6.3
+            pyenv global 3.6.3
+  set_up_singularity:
+    steps:
+      - run:
+          name: Ⓢ Setting Up Singularity
+          command: |
+            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
+            cd singularity
+            ./autogen.sh
+            ./configure --prefix=/usr/local --sysconfdir=/etc
+            make
+            sudo make install
+            cd ..
 jobs:
   pytest-docker:
     machine: true
@@ -6,11 +67,7 @@ jobs:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
-      - run:
-          name: 🐍 Setting Python Version
-          command: |
-            pyenv install 3.6.3
-            pyenv global 3.6.3
+      - set_python_version
       - run:
           name: 🖴 Getting Sample BIDS Data
           command: git clone https://github.com/bids-standard/bids-examples.git
@@ -31,11 +88,8 @@ jobs:
       - attach_workspace:
           # Must be absolute path or relative path from working_directory
           at: /home/circleci/
-      - run:
-          name: 🐍 Setting Python Version
-          command: |
-            pyenv install 3.6.3
-            pyenv global 3.6.3
+      - set_python_version
+      - set_up_singularity
       - run:
           name: 🔬 Testing Singularity Build
           command: |
@@ -52,11 +106,7 @@ jobs:
     machine: true
     steps:
       - checkout
-      - run:
-          name: 🐍 Setting Python Version
-          command: |
-            pyenv install 3.6.3
-            pyenv global 3.6.3
+      - set_python_version
       - run:
           name: 🐳 Building Docker Image
           command: |
@@ -80,7 +130,7 @@ jobs:
             docker load < cpac-docker-image.tar.gz
             docker tag fcpindi/c-pac:${CIRCLE_BRANCH//\//_} localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
             docker push localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
-            SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI.simg docker://localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_} 
+            SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI.simg docker://localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
       - store_artifacts:
           path: cpac-docker-image.tar.gz
       - store_artifacts:
@@ -92,152 +142,246 @@ jobs:
           root: /home/circleci/
           # Must be relative path from root
           paths: project
-  heatmaps:
-    machine: true
-    steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: /home/circleci/
-      - run:
-          name: 🐍 Setting Python Version
-          command: |
-            pyenv install 3.6.3
-            pyenv global 3.6.3
-      - run:
-          name: ≟
-          command: python dev/circleci_data/scripts/compare.py
   default-pipeline:
     machine: true
     steps:
       - attach_workspace:
           at: /home/circleci/
-      - run:
-          name: Ⓢ Setting Up Singularity
-          command: |
-            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
-            cd singularity
-            ./autogen.sh
-            ./configure --prefix=/usr/local --sysconfdir=/etc
-            make
-            sudo make install
-            cd ..
+      - set_up_singularity
       - run:
           name: 🔬 Running Default Pipeline Config On a Random Subject
           command: |
             mkdir outputs
-            curl -L -o dev/circleci_data/cpac_data_config_regtest.yml https://raw.githubusercontent.com/sgiavasis/CPAC_regtest_pack/master/cpac_data_config_regtest.yml
             singularity run -H /home/circleci/project -B dev/docker_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/default_pipeline.yml --n_cpus 1 --mem_gb 12 --participant_ndx $((RANDOM % 17))
           no_output_timeout: 5h
       - store_artifacts:
           path: outputs/crash
       - store_artifacts:
           path: outputs/log
-  habanero-rest-pipeline-singularity:
+  habanero-rest-pipeline-singularity-1:
     machine: true
     steps:
-      - attach_workspace:
-          at: /home/circleci/
-      - run:
-          name: Ⓢ Setting Up Singularity
-          command: |
-            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
-            cd singularity
-            ./autogen.sh
-            ./configure --prefix=/usr/local --sysconfdir=/etc
-            make
-            sudo make install
-            cd ..
-      - run:
-          name: 🔬 Running Habanero Pipeline Config in Singularity On a Random Subject
-          command: |
-            mkdir outputs
-            singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
-          no_output_timeout: 5h
-      - run:
-          name: 🖭 Tape Archiving Output Directories
-          command: tar -zcvf outputs.tar.gz outputs
-      - store_artifacts:
-          path: outputs.tar.gz
-  habanero-rest-pipeline-singularity-0.4:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 1
+  habanero-rest-pipeline-docker-1:
     machine: true
     steps:
-      - attach_workspace:
-          at: /home/circleci/
-      - run:
-          name: Ⓢ Setting Up Singularity
-          command: |
-            sudo apt-get update && sudo apt-get install flawfinder squashfs-tools uuid-dev libuuid1 libffi-dev libssl-dev libssl1.0.0 libarchive-dev libgpgme11-dev libseccomp-dev -y
-            cd singularity
-            ./autogen.sh
-            ./configure --prefix=/usr/local --sysconfdir=/etc
-            make
-            sudo make install
-            cd ..
-      - run:
-          name: 🔬 Running Habanero Pipeline Config in Singularity On a Random Subject
-          command: |
-            mkdir outputs
-            singularity run -H /home/circleci/project -B dev/circleci_data:/configs -B CPAC/resources/configs/test_configs:/test_configs C-PAC-CI.simg /home/circleci/project /home/circleci/project/outputs participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a-lower-thresh.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
-          no_output_timeout: 5h
-      - run:
-          name: 🖭 Tape Archiving Output Directories
-          command: tar -zcvf outputs.tar.gz outputs
-      - store_artifacts:
-          path: outputs.tar.gz
-  habanero-rest-pipeline-docker:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 1
+  habanero-rest-pipeline-singularity-2:
     machine: true
     steps:
-      - attach_workspace:
-          at: /home/circleci/
-      - run:
-          name: 🔬 Running Habanero Pipeline Config in Docker On a Random Subject
-          command: |
-            mkdir outputs
-            docker load < cpac-docker-image.tar.gz
-            docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/circleci_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
-          no_output_timeout: 5h
-      - run:
-          name: 🖭 Tape Archiving Output Directories
-          command: tar -zcvf outputs.tar.gz outputs
-      - store_artifacts:
-          path: outputs.tar.gz
-  habanero-rest-pipeline-docker-0.4:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 2
+  habanero-rest-pipeline-docker-2:
     machine: true
     steps:
-      - attach_workspace:
-          at: /home/circleci/
-      - run:
-          name: 🔬 Running Habanero Pipeline Config in Docker On a Random Subject
-          command: |
-            mkdir outputs
-            docker load < cpac-docker-image.tar.gz
-            docker run -i --rm -v /tmp:/tmp -v /home/circleci/project/outputs:/output -v /home/circleci/project/dev/circleci_data:/configs -v /home/circleci/project/CPAC/resources/configs/test_configs:/test_configs fcpindi/c-pac:${CIRCLE_BRANCH//\//_} /output /output participant --save_working_dir --data_config_file /test_configs/data-test_4-projects_5-subjects.yml --pipeline_file /configs/rest_test_CPACv1.6.2_nuis1-3a-lower-thresh.yml --n_cpus 1 --mem_gb 12 --participant_ndx=$((RANDOM % 20))
-          no_output_timeout: 5h
-      - run:
-          name: 🖭 Tape Archiving Output Directories
-          command: tar -zcvf outputs.tar.gz outputs
-      - store_artifacts:
-          path: outputs.tar.gz
-  test:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 2
+  habanero-rest-pipeline-singularity-3:
     machine: true
     steps:
-      - attach_workspace:
-          # Must be absolute path or relative path from working_directory
-          at: /home/circleci/
-      - run:
-          name: 🐍 Setting Python Version
-          command: |
-            pyenv install 3.6.3
-            pyenv global 3.6.3
-      - run:
-          name: 🔬 Running C-PAC
-          command: |
-            docker load < cpac-docker-image.tar.gz
-            docker run -i --rm -v $HOME:/output -v /tmp:/tmp cpac:${CIRCLE_BRANCH//\//_} s3://fcp-indi/data/Projects/RocklandSample/RawDataBIDS /output participant --participant_label A00028185 --pipeline_file /cpac_resources/pipe-test_ci.yml
-          no_output_timeout: 5h
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 3
+  habanero-rest-pipeline-docker-3:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 3
+  habanero-rest-pipeline-singularity-4:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 4
+  habanero-rest-pipeline-docker-4:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 4
+  habanero-rest-pipeline-singularity-5:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 5
+  habanero-rest-pipeline-docker-5:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 5
+  habanero-rest-pipeline-singularity-6:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 6
+  habanero-rest-pipeline-docker-6:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 6
+  habanero-rest-pipeline-singularity-7:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 7
+  habanero-rest-pipeline-docker-7:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 7
+  habanero-rest-pipeline-singularity-8:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 8
+  habanero-rest-pipeline-docker-8:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 8
+  habanero-rest-pipeline-singularity-9:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 9
+  habanero-rest-pipeline-docker-9:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 9
+  habanero-rest-pipeline-singularity-10:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 10
+  habanero-rest-pipeline-docker-10:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 10
+  habanero-rest-pipeline-singularity-11:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 11
+  habanero-rest-pipeline-docker-11:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 11
+  habanero-rest-pipeline-singularity-12:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 12
+  habanero-rest-pipeline-docker-12:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 12
+  habanero-rest-pipeline-singularity-13:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 13
+  habanero-rest-pipeline-docker-13:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 13
+  habanero-rest-pipeline-singularity-14:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 14
+  habanero-rest-pipeline-docker-14:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 14
+  habanero-rest-pipeline-singularity-15:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 15
+  habanero-rest-pipeline-docker-15:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 15
+  habanero-rest-pipeline-singularity-16:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 16
+  habanero-rest-pipeline-docker-16:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 16
+  habanero-rest-pipeline-singularity-17:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 17
+  habanero-rest-pipeline-docker-17:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 17
+  habanero-rest-pipeline-singularity-18:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 18
+  habanero-rest-pipeline-docker-18:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 18
+  habanero-rest-pipeline-singularity-19:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 19
+  habanero-rest-pipeline-docker-19:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 19
+  habanero-rest-pipeline-singularity-20:
+    machine: true
+    steps:
+      - set_up_singularity
+      - habanero-rest-pipeline-singularity:
+          participant_ndx: 20
+  habanero-rest-pipeline-docker-20:
+    machine: true
+    steps:
+      - habanero-rest-pipeline-docker:
+          participant_ndx: 20
+
 
 workflows:
-  version: 2
+  version: 2.1
   build_and_test:
     jobs:
       - build:
@@ -246,36 +390,129 @@ workflows:
               ignore:
                 - feature/auto-heatmaps
                 - config/test_config
-      - test:
-          requires:
-            - build
-          filters:
-            branches:
-              only:
-                - develop
-                - master
-      - heatmaps:
-          requires:
-            - build
-            - test
-          filters:
-            branches:
-              only: feature/auto-heatmaps
       - pytest-docker:
           requires:
             - build
       - pytest-singularity:
           requires:
             - build
-      - habanero-rest-pipeline-singularity:
+      - habanero-rest-pipeline-singularity-1:
           requires:
             - build
-      - habanero-rest-pipeline-docker:
+      - habanero-rest-pipeline-docker-1:
           requires:
             - build
-      - habanero-rest-pipeline-singularity-0.4:
+      - habanero-rest-pipeline-singularity-10:
           requires:
             - build
-      - habanero-rest-pipeline-docker-0.4:
+      - habanero-rest-pipeline-docker-2:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-2:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-3:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-3:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-4:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-4:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-5:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-5:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-6:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-6:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-7:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-7:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-8:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-8:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-9:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-9:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-10:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-11:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-11:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-12:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-12:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-13:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-13:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-14:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-14:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-15:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-15:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-16:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-16:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-17:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-17:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-18:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-18:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-19:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-19:
+          requires:
+            - build
+      - habanero-rest-pipeline-singularity-20:
+          requires:
+            - build
+      - habanero-rest-pipeline-docker-20:
           requires:
             - build

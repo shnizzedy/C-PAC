@@ -1,3 +1,7 @@
+#!/bin/bash
+
+### Takes a runscript and a participant number as positional variables
+
 EXIT_STATUS=1
 while read OUT
 do
