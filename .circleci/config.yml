@@ -25,8 +25,6 @@ commands:
       participant_ndx:
         type: integer
     steps:
-      - attach_workspace:
-          at: /home/circleci/
       - set_up_singularity
       - run:
           name: 🔬 Running Habanero Pipeline Config in Singularity On Subject << parameters.participant_ndx >>
@@ -50,6 +48,9 @@ commands:
             pyenv global 3.6.3
   set_up_singularity:
     steps:
+      - attach_workspace:
+          # Must be absolute path or relative path from working_directory
+          at: /home/circleci/
       - run:
           name: Ⓢ Setting Up Singularity
           command: |
