@@ -706,8 +706,6 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
         ("anat", "PRIORS_GRAY"),
         ("anat", "PRIORS_WHITE"),
         ("other", "configFileTwomm"),
-        ("anat", "ANTs_prior_seg_template_brain_list"),
-        ("anat", "ANTs_prior_seg_template_segmentation_list"),
         ("anat", "template_based_segmentation_CSF"),
         ("anat", "template_based_segmentation_GRAY"),
         ("anat", "template_based_segmentation_WHITE"),
