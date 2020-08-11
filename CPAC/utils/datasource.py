@@ -430,6 +430,10 @@ def check_for_s3(file_path, creds_path=None, dl_dir=None, img_type='other',
         # if this is a dictionary, just skip altogether
         local_path = file_path
         return local_path
+    
+    # Resolve if symlink
+    while os.path.islink(file_path):
+        file_path = os.readlink(file_path)
 
     if file_path.lower().startswith(s3_str):
         
