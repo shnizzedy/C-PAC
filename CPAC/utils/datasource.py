@@ -431,9 +431,32 @@ def check_for_s3(file_path, creds_path=None, dl_dir=None, img_type='other',
         local_path = file_path
         return local_path
     
+    ### DEBUGGING ↓
+    print("1. One")
+    print(f"{file_path}\nis link? {os.path.islink(file_path)}\nexists? {os.path.exists(file_path)}")    
+    ### DEBUGGING ↑
+    
     # Resolve if symlink
     while os.path.islink(file_path):
         file_path = os.readlink(file_path)
+        
+    ### DEBUGGING ↓
+    print("2. Two")
+    print(f"{file_path}\nis link? {os.path.islink(file_path)}\nexists? {os.path.exists(file_path)}")    
+    ### DEBUGGING ↑
+    
+    # Resolve if symlink
+    while not os.path.exists(file_path):
+        if os.path.lexists(file_path):
+            file_path = os.readlink(file_path)
+        else:
+            # raise IOError('File {0} does not exist!'.format(local_path))
+            break
+        
+    ### DEBUGGING ↓
+    print("3. Three")
+    print(f"{file_path}\nis link? {os.path.islink(file_path)}\nexists? {os.path.exists(file_path)}")    
+    ### DEBUGGING ↑
 
     if file_path.lower().startswith(s3_str):
         
