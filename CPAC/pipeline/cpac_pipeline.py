@@ -933,7 +933,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                 new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                 new_strat.update_resource_pool({
                     'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                    'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                    'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                 })
                 new_strat.update_resource_pool({
                     'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask')
@@ -964,7 +964,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                 new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                 new_strat.update_resource_pool({
                     'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                    'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                    'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                     'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask'),
                 })
 
@@ -984,29 +984,6 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                                                     config=c,
                                                     wf_name='anat_preproc_afni_%d' % num_strat)
 
-                    anat_preproc.inputs.AFNI_options.set(
-                        mask_vol=c.skullstrip_mask_vol,
-                        shrink_factor=c.skullstrip_shrink_factor,
-                        var_shrink_fac=c.skullstrip_var_shrink_fac,
-                        shrink_fac_bot_lim=c.skullstrip_shrink_factor_bot_lim,
-                        avoid_vent=c.skullstrip_avoid_vent,
-                        niter=c.skullstrip_n_iterations,
-                        pushout=c.skullstrip_pushout,
-                        touchup=c.skullstrip_touchup,
-                        fill_hole=c.skullstrip_fill_hole,
-                        avoid_eyes=c.skullstrip_avoid_eyes,
-                        use_edge=c.skullstrip_use_edge,
-                        exp_frac=c.skullstrip_exp_frac,
-                        smooth_final=c.skullstrip_smooth_final,
-                        push_to_edge=c.skullstrip_push_to_edge,
-                        use_skull=c.skullstrip_use_skull,
-                        perc_int=c.skullstrip_perc_int,
-                        max_inter_iter=c.skullstrip_max_inter_iter,
-                        blur_fwhm=c.skullstrip_blur_fwhm,
-                        fac=c.skullstrip_fac,
-                        monkey=c.skullstrip_monkey,
-                    )
-
                     new_strat = strat.fork()
                     node, out_file = new_strat['anatomical']
                     workflow.connect(node, out_file,
@@ -1015,7 +992,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                     new_strat.update_resource_pool({
                         'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                        'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                        'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                         'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask'),
                     })
 
@@ -1026,22 +1003,6 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                                                     config=c,
                                                     wf_name='anat_preproc_bet_%d' % num_strat)
 
-                    anat_preproc.inputs.BET_options.set(
-                        frac=c.bet_frac,
-                        mask_boolean=c.bet_mask_boolean,
-                        mesh_boolean=c.bet_mesh_boolean,
-                        outline=c.bet_outline,
-                        padding=c.bet_padding,
-                        radius=c.bet_radius,
-                        reduce_bias=c.bet_reduce_bias,
-                        remove_eyes=c.bet_remove_eyes,
-                        robust=c.bet_robust,
-                        skull=c.bet_skull,
-                        surfaces=c.bet_surfaces,
-                        threshold=c.bet_threshold,
-                        vertical_gradient=c.bet_vertical_gradient,
-                    )
-
                     new_strat = strat.fork()
                     node, out_file = new_strat['anatomical']
                     workflow.connect(node, out_file,
@@ -1050,7 +1011,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                     new_strat.update_resource_pool({
                         'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                        'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                        'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                         'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask'),
                     })
 
@@ -1069,7 +1030,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                     new_strat.update_resource_pool({
                         'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                        'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                        'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                         'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask'),
                     })
 
@@ -1094,7 +1055,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     new_strat.set_leaf_properties(anat_preproc, 'outputspec.brain')
                     new_strat.update_resource_pool({
                         'anatomical_brain': (anat_preproc, 'outputspec.brain'),
-                        'anatomical_reorient': (anat_preproc, 'outputspec.reorient'),
+                        'anatomical_skull_leaf': (anat_preproc, 'outputspec.anat_skull_leaf'),
                         'anatomical_brain_mask': (anat_preproc, 'outputspec.brain_mask'),
                     })
 
@@ -1183,7 +1144,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     workflow.connect(node, out_file,
                         fnirt_reg_anat_mni, 'inputspec.reference_brain')
 
-                    node, out_file = strat['anatomical_reorient']
+                    node, out_file = strat['anatomical_skull_leaf']
                     workflow.connect(node, out_file,
                                     fnirt_reg_anat_mni, 'inputspec.input_skull')
 
@@ -1279,7 +1240,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                     ants_reg_anat_mni, 'inputspec.reference_brain')
 
                 # get the reorient skull-on anatomical from resource pool
-                node, out_file = strat['anatomical_reorient']
+                node, out_file = strat['anatomical_skull_leaf']
 
                 # pass the anatomical to the workflow
                 workflow.connect(node, out_file,
@@ -1436,7 +1397,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
                         workflow.connect(node, out_file,
                             fnirt_reg_anat_symm_mni, 'inputspec.reference_brain')
 
-                        node, out_file = strat['anatomical_reorient']
+                        node, out_file = strat['anatomical_skull_leaf']
                         workflow.connect(node, out_file,
                                         fnirt_reg_anat_symm_mni,
                                         'inputspec.input_skull')
@@ -1519,7 +1480,7 @@ def build_workflow(subject_id, sub_dict, c, pipeline_name=None, num_ants_cores=1
 
                     # get the reorient skull-on anatomical from resource
                     # pool
-                    node, out_file = strat['anatomical_reorient']
+                    node, out_file = strat['anatomical_skull_leaf']
 
                     # pass the anatomical to the workflow
                     workflow.connect(node, out_file,
