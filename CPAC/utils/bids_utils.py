@@ -496,9 +496,19 @@ def bids_gen_cpac_sublist(bids_dir, paths_list, config_dict, creds_path,
 
 def collect_bids_files_configs(bids_dir, aws_input_creds=''):
     """
-    :param bids_dir:
-    :param aws_input_creds:
-    :return:
+    Function to collect files and configurations from a BIDS directory
+    
+    Parameters
+    ----------
+    bids_dir: str
+    
+    aws_input_creds: str
+    
+    Returns
+    -------
+    file_paths: list
+    
+    config_dict: dict
     """
 
     file_paths = []
