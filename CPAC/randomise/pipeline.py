@@ -8,6 +8,7 @@ from nilearn.image import resample_to_img, concat_imgs
 from nilearn.input_data import NiftiMasker, NiftiLabelsMasker
 
 from CPAC.utils.interfaces.function import Function
+from .randomise import select
 
 import os
 import copy
@@ -21,24 +22,24 @@ def create_randomise(name='randomise',working_dir=None,crash_dir=None):
     """
     Parameters
     ----------
-        
+
     Returns
     -------
     workflow : nipype.pipeline.engine.Workflow
         Randomise workflow.
-        
+
     Notes
     -----
-    
+
     Workflow Inputs::
-    
-        
+
+
     Workflow Outputs::
 
-    
+
     References
     ----------
-    
+
     """
 
     if not working_dir:
@@ -52,10 +53,10 @@ def create_randomise(name='randomise',working_dir=None,crash_dir=None):
                               'crashdump_dir': os.path.abspath(crash_dir)}
 
     inputspec = pe.Node(util.IdentityInterface(fields=['subjects_list','pipeline_output_folder','permutations','mask_boolean','demean','c_thresh']),name='inputspec')
-    
+
     outputspec = pe.Node(util.IdentityInterface(fields=['tstat_files' ,'t_corrected_p_files','index_file','threshold_file','localmax_txt_file','localmax_vol_file','max_file','mean_file','pval_file','size_file']), name='outputspec')
-    
-    
+
+
     #merge = pe.Node(interface=fsl.Merge(), name='fsl_merge')
     #merge.inputs.dimension = 't'
     #merge.inputs.merged_file = "randomise_merged.nii.gz"
@@ -80,7 +81,7 @@ def create_randomise(name='randomise',working_dir=None,crash_dir=None):
     wf.connect(randomise,'t_corrected_p_files',outputspec,'t_corrected_p_files')
 #------------- issue here arises while using tfce. By not using tfce, you don't get t_corrected_p files. R V in a conundrum? --------------------#
 
-    
+
     select_tcorrp_files = pe.Node(Function(input_names=['input_list'],output_names=['out_file'],function=select),name='select_t_corrp')
 
     wf.connect(randomise, 't_corrected_p_files',select_tcorrp_files, 'input_list')
@@ -117,10 +118,10 @@ def create_randomise(name='randomise',working_dir=None,crash_dir=None):
     cluster.inputs.out_mean_file = True
     cluster.inputs.out_pval_file = True
     cluster.inputs.out_size_file = True
-    
+
 
     wf.connect(apply_mask, 'out_file', cluster, 'in_file')
-    
+
     wf.connect(cluster,'index_file',outputspec,'index_file')
     wf.connect(cluster,'threshold_file',outputspec,'threshold_file')
     wf.connect(cluster,'localmax_txt_file',outputspec,'localmax_txt_file')
@@ -129,7 +130,7 @@ def create_randomise(name='randomise',working_dir=None,crash_dir=None):
     wf.connect(cluster,'mean_file',outputspec,'meal_file')
     wf.connect(cluster,'pval_file',outputspec,'pval_file')
     wf.connect(cluster,'size_file',outputspec,'size_file')
-    
-  
+
+
 
     return wf
