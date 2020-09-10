@@ -92,6 +92,9 @@ def create_anat_preproc(method='afni', already_skullstripped=False, config=None,
 
     Examples
     --------
+    >>> import pytest
+    >>> pytest.skip(
+    ...     'No config is given to this function, which requires one.')
     >>> from CPAC.anat_preproc import create_anat_preproc
     >>> preproc = create_anat_preproc()
     >>> preproc.inputs.inputspec.anat = 'sub1/anat/mprage.nii.gz'
@@ -514,4 +517,3 @@ def create_anat_preproc(method='afni', already_skullstripped=False, config=None,
             preproc.connect(refined_brain, 'out_file', outputnode, 'brain')
 
     return preproc
-
