@@ -45,6 +45,7 @@ RUN apt-get install -y \
       libxi-dev \
       libxmu-headers \
       libxmu-dev \
+      libXp \
       libxpm-dev \
       libxslt1-dev \
       m4 \
@@ -77,17 +78,6 @@ RUN apt-get install -y \
 RUN curl -sLo /tmp/libpng12.deb http://mirrors.kernel.org/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb && \
     dpkg -i /tmp/libpng12.deb && \
     rm /tmp/libpng12.deb
-
-# Compiles libxp- this is necessary for some newer versions of Ubuntu
-# where the is no Debian package available.
-RUN git clone git://anongit.freedesktop.org/xorg/lib/libXp /tmp/libXp && \
-    cd /tmp/libXp && \
-    ./autogen.sh && \
-    ./configure && \
-    make && \
-    make install && \
-    cd - && \
-    rm -rf /tmp/libXp
 
 # Installing and setting up c3d
 RUN mkdir -p /opt/c3d && \
