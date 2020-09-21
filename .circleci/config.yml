@@ -84,7 +84,7 @@ jobs:
             docker tag fcpindi/c-pac:${CIRCLE_BRANCH//\//_} localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
             docker push localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
             python3 dev/circleci_data/use_local_dockerfile.py Singularity localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}
-            SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI.simg Singularity
+            sudo SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI.simg Singularity
           no_output_timeout: 2h
       - store_artifacts:
           path: cpac-docker-image.tar.gz
@@ -134,7 +134,7 @@ jobs:
             docker tag fcpindi/c-pac:${CIRCLE_BRANCH//\//_}-surface localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}-surface
             docker push localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}-surface
             python3 dev/circleci_data/use_local_dockerfile.py variant-surface.Singularity localhost:5000/fcpindi/c-pac:${CIRCLE_BRANCH//\//_}-surface
-            SINGULARITY_NOHTTPS=1 singularity build C-PAC-CI-surface.simg variant-surface.Singularity
+            sudo SINGULARITY_NOHTTPS=1 singularity build C-PAC-surface-CI.simg variant-surface.Singularity
           no_output_timeout: 2h
       - store_artifacts:
           path: cpac-surface-docker-image.tar.gz
