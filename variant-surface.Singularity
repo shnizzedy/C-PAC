@@ -4,6 +4,4 @@ IncludeCmd: yes
 
 %environment
     FREESURFER_HOME=/usr/lib/freesurfer
-
-%post
-    cp ~/.bashrc ~/.bash_profile
+    source $FREESURFER_HOME/SetUpFreeSurfer.sh
