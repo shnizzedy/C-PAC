@@ -5,3 +5,6 @@ IncludeCmd: yes
 %environment
     FREESURFER_HOME=/usr/lib/freesurfer
     source $FREESURFER_HOME/SetUpFreeSurfer.sh
+
+%post
+    chmod -R o+rX $FREESURFER_HOME
