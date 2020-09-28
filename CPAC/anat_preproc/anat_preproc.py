@@ -33,15 +33,15 @@ def patch_cmass_output(lst, index=0):
 
 
 def acpc_alignment(skullstrip_tool='afni', config=None, acpc_target='whole-head', wf_name='acpc_align'):
-               
+
     preproc = pe.Workflow(name=wf_name)
 
-    inputnode = pe.Node(util.IdentityInterface(fields=['anat_leaf', 
+    inputnode = pe.Node(util.IdentityInterface(fields=['anat_leaf',
                                                        'brain_mask',
                                                        'template_brain_only_for_anat',
                                                        'template_skull_for_anat',
                                                        'template_brain_for_acpc',
-                                                       'template_head_for_acpc']), 
+                                                       'template_head_for_acpc']),
                         name='inputspec')
 
     output_node = pe.Node(util.IdentityInterface(fields=['acpc_aligned_head',
@@ -56,22 +56,22 @@ def acpc_alignment(skullstrip_tool='afni', config=None, acpc_target='whole-head'
     # align head-to-head to get acpc.mat (for human)
     if acpc_target == 'whole-head':
         preproc.connect(inputnode, 'anat_leaf', robust_fov, 'in_file')
-    
+
     # align brain-to-brain to get acpc.mat (for monkey)
     if acpc_target == 'brain':
-        initial_skullstrip =  skullstrip_anatomical(method=skullstrip_tool, config=config, 
+        initial_skullstrip =  skullstrip_anatomical(method=skullstrip_tool, config=config,
                                                     wf_name="anat_acpc_0_pre")
-        preproc.connect(inputnode, 'anat_leaf', 
+        preproc.connect(inputnode, 'anat_leaf',
                         initial_skullstrip, 'inputspec.anat_data')
         if skullstrip_tool == 'mask':
             preproc.connect(inputnode, 'brain_mask',
-                            initial_skullstrip, 'inputspec.brain_mask') 
+                            initial_skullstrip, 'inputspec.brain_mask')
         elif skullstrip_tool == 'unet':
             preproc.connect(inputnode, 'template_brain_only_for_anat',
-                            initial_skullstrip, 'inputspec.template_brain_only_for_anat')   
+                            initial_skullstrip, 'inputspec.template_brain_only_for_anat')
             preproc.connect(inputnode, 'template_skull_for_anat',
-                            initial_skullstrip, 'inputspec.template_skull_for_anat') 
-        preproc.connect(initial_skullstrip, 'outputspec.brain', 
+                            initial_skullstrip, 'inputspec.template_skull_for_anat')
+        preproc.connect(initial_skullstrip, 'outputspec.brain',
                         robust_fov, 'in_file')
 
     convert_fov_xfm = pe.Node(interface=fsl_utils.ConvertXFM(),
@@ -93,7 +93,7 @@ def acpc_alignment(skullstrip_tool='afni', config=None, acpc_target='whole-head'
     # align head-to-head to get acpc.mat (for human)
     if acpc_target == 'whole-head':
         preproc.connect(inputnode, 'template_head_for_acpc', align, 'reference')
-    
+
     # align brain-to-brain to get acpc.mat (for monkey)
     if acpc_target=='brain':
         preproc.connect(inputnode, 'template_brain_for_acpc', align, 'reference')
@@ -145,10 +145,10 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
 
     preproc = pe.Workflow(name=wf_name)
 
-    inputnode = pe.Node(util.IdentityInterface(fields=['anat_data', 
+    inputnode = pe.Node(util.IdentityInterface(fields=['anat_data',
                                                        'brain_mask',
                                                        'template_brain_only_for_anat',
-                                                       'template_skull_for_anat']), 
+                                                       'template_skull_for_anat']),
                          name='inputspec')
     outputnode = pe.Node(util.IdentityInterface(fields=['skullstrip',
                                                         'brain',
@@ -205,7 +205,7 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
                                                 output_names=['expr'],
                                                 function=create_3dskullstrip_arg_string),
                                     name='anat_skullstrip_args')
-        
+
         inputnode_afni.inputs.set(
                 mask_vol=config.skullstrip_mask_vol,
                 shrink_factor=config.skullstrip_shrink_factor,
@@ -315,7 +315,7 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         anat_skullstrip = pe.Node(
             interface=fsl.BET(), name='anat_skullstrip')
         anat_skullstrip.inputs.output_type = 'NIFTI_GZ'
-        
+
         inputnode_bet.inputs.set(
                 frac=config.bet_frac,
                 mask_boolean=config.bet_mask_boolean,
@@ -375,8 +375,8 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         preproc.connect(anat_skullstrip_orig_vol, 'out_file',
                         outputnode, 'brain')
 
-    elif method == 'niworkflows-ants': 
-        # Skull-stripping using niworkflows-ants  
+    elif method == 'niworkflows-ants':
+        # Skull-stripping using niworkflows-ants
         anat_skullstrip_ants = init_brain_extraction_wf(tpl_target_path=config.niworkflows_ants_template_path,
                                                         tpl_mask_path=config.niworkflows_ants_mask_path,
                                                         tpl_regmask_path=config.niworkflows_ants_regmask_path,
@@ -438,11 +438,11 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         """
         # TODO: add options to pipeline_config
         unet_check_for_s3 = create_check_for_s3_node('unet', config.unet_model)
-        unet_mask = pe.Node(util.Function(input_names=['model_path', 'cimg_in'], 
+        unet_mask = pe.Node(util.Function(input_names=['model_path', 'cimg_in'],
                                             output_names=['out_path'],
-                                            function=predict_volumes),                        
+                                            function=predict_volumes),
                             name='unet_mask')
-        
+
         preproc.connect(unet_check_for_s3, 'local_path', unet_mask, 'model_path')
         preproc.connect(inputnode, 'anat_data', unet_mask, 'cimg_in')
 
@@ -462,9 +462,9 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         native_brain_to_template_brain.inputs.interp = 'sinc'
         preproc.connect(unet_masked_brain, 'out_file', native_brain_to_template_brain, 'in_file')
         preproc.connect(inputnode, 'template_brain_only_for_anat', native_brain_to_template_brain, 'reference')
-        
+
         # flirt -in head.nii.gz -ref NMT_0.5mm.nii.gz -o head_rot2atl -applyxfm -init brain_rot2atl.mat
-        # TODO: antsApplyTransforms -d 3 -i head.nii.gz -r NMT_0.5mm.nii.gz -n Linear -o head_rot2atl.nii.gz -v -t transform1Rigid.mat -t transform2Affine.mat -t transform0DerivedInitialMovingTranslation.mat 
+        # TODO: antsApplyTransforms -d 3 -i head.nii.gz -r NMT_0.5mm.nii.gz -n Linear -o head_rot2atl.nii.gz -v -t transform1Rigid.mat -t transform2Affine.mat -t transform0DerivedInitialMovingTranslation.mat
         native_head_to_template_head = pe.Node(interface=fsl.FLIRT(), name='native_head_to_template_head')
         native_head_to_template_head.inputs.apply_xfm = True
         preproc.connect(inputnode, 'anat_data', native_head_to_template_head, 'in_file')
@@ -483,9 +483,9 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         ants_template_head_to_template.inputs.transforms = ['SyN']
         ants_template_head_to_template.inputs.transform_parameters = [(0.25,)]
         ants_template_head_to_template.inputs.interpolation = 'NearestNeighbor'
-        ants_template_head_to_template.inputs.number_of_iterations = [[60,50,20]] 
+        ants_template_head_to_template.inputs.number_of_iterations = [[60,50,20]]
         ants_template_head_to_template.inputs.smoothing_sigmas = [[0.6,0.2,0.0]]
-        ants_template_head_to_template.inputs.shrink_factors = [[4,2,1]] 
+        ants_template_head_to_template.inputs.shrink_factors = [[4,2,1]]
         ants_template_head_to_template.inputs.convergence_threshold = [1.e-8]
         preproc.connect(native_head_to_template_head, 'out_file', ants_template_head_to_template, 'fixed_image')
         preproc.connect(inputnode, 'template_skull_for_anat', ants_template_head_to_template, 'moving_image')
@@ -496,8 +496,8 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         preproc.connect(native_brain_to_template_brain, 'out_file', template_head_transform_to_template, 'reference_image')
         preproc.connect(ants_template_head_to_template, 'forward_transforms', template_head_transform_to_template, 'transforms')
 
-        # TODO: replace convert_xfm and flirt with: 
-        # antsApplyTransforms -d 3 -i brain_rot2atl_mask.nii.gz -r brain.nii.gz -n linear -o brain_mask.nii.gz -t [transform0DerivedInitialMovingTranslation.mat,1] -t [transform2Affine.mat,1] -t [transform1Rigid.mat,1] 
+        # TODO: replace convert_xfm and flirt with:
+        # antsApplyTransforms -d 3 -i brain_rot2atl_mask.nii.gz -r brain.nii.gz -n linear -o brain_mask.nii.gz -t [transform0DerivedInitialMovingTranslation.mat,1] -t [transform2Affine.mat,1] -t [transform1Rigid.mat,1]
         # convert_xfm -omat brain_rot2native.mat -inverse brain_rot2atl.mat 
         invt = pe.Node(interface=fsl.ConvertXFM(), name='convert_xfm')
         invt.inputs.invert_xfm = True
@@ -521,7 +521,7 @@ def skullstrip_anatomical(method='afni', config=None, wf_name='skullstrip_anatom
         refined_brain.inputs.op_string = "-mul %s"
         preproc.connect(inputnode, 'anat_data', refined_brain, 'in_file')
         preproc.connect(refined_mask, 'out_file', refined_brain, 'operand_files')
-        
+
         preproc.connect(refined_mask, 'out_file', outputnode, 'brain_mask')
         preproc.connect(refined_brain, 'out_file', outputnode, 'brain')
 
@@ -588,12 +588,30 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
                -expr 'a*step(b)'
                -prefix mprage_RPI_3dc.nii.gz
 
+    .. exec::
+        import yaml
+        from urllib.request import urlopen
+        from CPAC.anat_preproc import create_anat_preproc
+        from CPAC.utils.configuration import Configuration
+
+        wf = create_anat_preproc(
+            config=Configuration(yaml.safe_load(urlopen(
+                'https://raw.githubusercontent.com/FCP-INDI/C-PAC/develop/'
+                'dev/docker_data/default_pipeline.yml'
+            )))
+        )
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/anatpreproc.dot'
+        )
+
     High Level Workflow Graph:
-    .. image:: ../images/anatpreproc_graph.dot.png
+
+    .. image:: ../../images/generated/anatpreproc.png
        :width: 500
 
     Detailed Workflow Graph:
-    .. image:: ../images/anatpreproc_graph_detailed.dot.png
+    .. image:: ../../images/generated/anatpreproc_detailed.png
        :width: 500
 
     Examples
@@ -642,7 +660,7 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
     if not config.acpc_align:
         preproc.connect(anat_reorient, 'out_file', anat_leaf, 'anat_data')
 
-    # ACPC alignment     
+    # ACPC alignment
     if config.acpc_align:
         acpc_align = acpc_alignment(skullstrip_tool=method, config=config, acpc_target=acpc_target, wf_name='acpc_align')
 
@@ -658,7 +676,7 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
     if method == 'niworkflows-ants':
         config.non_local_means_filtering = False
         config.n4_bias_field_correction = False
-        
+
     if config.non_local_means_filtering and config.n4_bias_field_correction:
         denoise = pe.Node(interface = ants.DenoiseImage(), name = 'anat_denoise')
         preproc.connect(anat_leaf, 'anat_data', denoise, 'input_image')
@@ -678,7 +696,7 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
 
     anat_leaf2 = pe.Node(util.IdentityInterface(fields=['anat_data']),
                          name='anat_leaf2')
-    
+
     if config.n4_bias_field_correction:
         preproc.connect(n4, 'output_image', anat_leaf2, 'anat_data')
     elif config.non_local_means_filtering and not config.n4_bias_field_correction:
@@ -695,7 +713,7 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
 
         preproc.connect(anat_skullstrip, 'out_file',
                         outputnode, 'skullstrip')
-        
+
         # binarize skullstripped brain to get brain mask
         brain_mask = pe.Node(interface=fsl.maths.MathsCommand(), name='brain_mask')
         brain_mask.inputs.args = '-bin'
@@ -711,28 +729,26 @@ def create_anat_preproc(method='afni', already_skullstripped=False,
 
     else:
 
-        anat_skullstrip = skullstrip_anatomical(method=method, config=config, 
+        anat_skullstrip = skullstrip_anatomical(method=method, config=config,
                                                 wf_name="{0}_skullstrip".format(wf_name))
         preproc.connect(anat_leaf2, 'anat_data',
                         anat_skullstrip, 'inputspec.anat_data')
         preproc.connect(inputnode, 'template_brain_only_for_anat',
-                        anat_skullstrip, 'inputspec.template_brain_only_for_anat') 
-        preproc.connect(inputnode, 'template_skull_for_anat', 
+                        anat_skullstrip, 'inputspec.template_brain_only_for_anat')
+        preproc.connect(inputnode, 'template_skull_for_anat',
                         anat_skullstrip, 'inputspec.template_skull_for_anat')
-            
+
         if method == 'mask' and config.acpc_align:
-            preproc.connect(acpc_align, 'outputspec.acpc_brain_mask', 
-                            anat_skullstrip, 'inputspec.brain_mask') 
-        else:             
+            preproc.connect(acpc_align, 'outputspec.acpc_brain_mask',
+                            anat_skullstrip, 'inputspec.brain_mask')
+        else:
             preproc.connect(inputnode, 'brain_mask',
-                            anat_skullstrip, 'inputspec.brain_mask') 
+                            anat_skullstrip, 'inputspec.brain_mask')
         preproc.connect(anat_skullstrip, 'outputspec.brain_mask',
                         outputnode, 'brain_mask')
-        preproc.connect(anat_skullstrip, 'outputspec.brain', 
+        preproc.connect(anat_skullstrip, 'outputspec.brain',
                         outputnode, 'brain')
-    
+
     preproc.connect(anat_leaf2, 'anat_data', outputnode, 'anat_skull_leaf')
 
     return preproc
-
-

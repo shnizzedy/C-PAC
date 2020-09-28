@@ -48,7 +48,6 @@ def get_zscore(input_name, map_node=False, wf_name='z_score'):
     -----
     `Source <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/network_centrality/z_score.py>`_
 
-
     Workflow Inputs::
 
         inputspec.input_file : string
@@ -61,15 +60,23 @@ def get_zscore(input_name, map_node=False, wf_name='z_score'):
         outputspec.z_score_img : string
              path to image containing Normalized Input Image Z scores across full brain.
 
+    .. exec::
+        from CPAC.utils import get_zscore
+        wf = get_zscore('mean')
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/zscore.dot'
+        )
+
     High Level Workflow Graph:
 
-    .. image:: ../images/zscore.dot.png
+    .. image:: ../../images/generated/zscore.png
        :width: 500
 
 
     Detailed Workflow Graph:
 
-    .. image:: ../images/zscore_detailed.dot.png
+    .. image:: ../../images/generated/zscore_detailed.png
        :width: 500
 
     Example
@@ -1389,13 +1396,13 @@ def concat_list(in_list1=None, in_list2=None):
             in_list1 = [in_list1]
     else:
         in_list1 = []
-    
+
     if in_list2 != None:
         if not isinstance(in_list2, list):
             in_list2 = [in_list2]
     else:
         in_list2 = []
-    
+
     out_list = in_list1 + in_list2
-    
+
     return out_list

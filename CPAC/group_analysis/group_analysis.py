@@ -71,133 +71,133 @@ def create_fsl_flame_wf(ftest=False, wf_name='groupAnalysis'):
     ----------
     ftest : boolean, optional(default=False)
         Ftest help investigate several contrasts at the same time
-        for example to see whether any of them (or any combination of them) is 
-        significantly non-zero. Also, the F-test allows you to compare the 
-        contribution of each contrast to the model and decide on significant 
+        for example to see whether any of them (or any combination of them) is
+        significantly non-zero. Also, the F-test allows you to compare the
+        contribution of each contrast to the model and decide on significant
         and non-significant ones
- 
-    wf_name : string 
+
+    wf_name : string
         Workflow name
-    
-    Returns 
+
+    Returns
     -------
     grp_analysis : workflow object
         Group Analysis workflow object
-    
+
     Notes
     -----
     `Source <https://github.com/openconnectome/C-PAC/blob/master/CPAC/group_analysis/group_analysis_preproc.py>`_
- 
+
     Workflow Inputs::
-        
+
         inputspec.mat_file : string (existing file)
-           Mat file containing  matrix for design 
-        
+           Mat file containing  matrix for design
+
         inputspec.con_file : string (existing file)
-           Contrast file containing contrast vectors 
-        
+           Contrast file containing contrast vectors
+
         inputspec.grp_file : string (existing file)
            file containing matrix specifying the groups the covariance is split into
-        
+
         inputspec.zmap_files : string (existing nifti file)
            derivative or the zmap file for which the group analysis is to be run
-        
+
         inputspec.z_threshold : float
-            Z Statistic threshold value for cluster thresholding. It is used to 
-            determine what level of activation would be statistically significant. 
+            Z Statistic threshold value for cluster thresholding. It is used to
+            determine what level of activation would be statistically significant.
             Increasing this will result in higher estimates of required effect.
-        
+
         inputspec.p_threshold : float
             Probability threshold for cluster thresholding.
-            
+
         inputspec.fts_file : string (existing file)
            file containing matrix specifying f-contrasts
-           
+
         inputspec.paramerters : string (tuple)
             tuple containing which MNI and FSLDIR path information
-                      
+
     Workflow Outputs::
-    
+
         outputspec.merged : string (nifti file)
-            4D volume file after merging all the derivative 
+            4D volume file after merging all the derivative
             files from each specified subject.
-            
+
         outputspec.zstats : list (nifti files)
             Z statistic image for each t contrast
-            
+
         outputspec.zfstats : list (nifti files)
             Z statistic image for each f contrast
-        
+
         outputspec.fstats : list (nifti files)
-            F statistic for each contrast  
-        
+            F statistic for each contrast
+
         outputspec.cluster_threshold : list (nifti files)
            the thresholded Z statistic image for each t contrast
-        
+
         outputspec.cluster_index : list (nifti files)
-            image of clusters for each t contrast; the values 
-            in the clusters are the index numbers as used 
+            image of clusters for each t contrast; the values
+            in the clusters are the index numbers as used
             in the cluster list.
-        
+
         outputspec.cluster_localmax_txt : list (text files)
-            local maxima text file for each t contrast, 
+            local maxima text file for each t contrast,
             defines the coordinates of maximum value in the cluster
-        
+
         outputspec.overlay_threshold : list (nifti files)
             3D color rendered stats overlay image for t contrast
-            After reloading this image, use the Statistics Color 
+            After reloading this image, use the Statistics Color
             Rendering GUI to reload the color look-up-table
-        
+
         outputspec.overlay_rendered_image : list (nifti files)
            2D color rendered stats overlay picture for each t contrast
-            
+
         outputspec.cluster_threshold_zf : list (nifti files)
            the thresholded Z statistic image for each f contrast
-        
+
         outputspec.cluster_index_zf : list (nifti files)
-            image of clusters for each f contrast; the values 
-            in the clusters are the index numbers as used 
+            image of clusters for each f contrast; the values
+            in the clusters are the index numbers as used
             in the cluster list.
-            
+
         outputspec.cluster_localmax_txt_zf : list (text files)
-            local maxima text file for each f contrast, 
+            local maxima text file for each f contrast,
             defines the coordinates of maximum value in the cluster
-        
+
         outputspec.overlay_threshold_zf : list (nifti files)
             3D color rendered stats overlay image for f contrast
-            After reloading this image, use the Statistics Color 
+            After reloading this image, use the Statistics Color
             Rendering GUI to reload the color look-up-table
-        
+
         outputspec.overlay_rendered_image_zf : list (nifti files)
            2D color rendered stats overlay picture for each f contrast
-    
+
     Order of commands:
 
     - Merge all the Z-map 3D images into 4D image file.  For details see `fslmerge <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils>`_::
-    
-        fslmerge -t sub01/sca/seed1/sca_Z_FWHM_merged.nii 
-                    sub02/sca/seed1/sca_Z_FWHM.nii.gz ....  
+
+        fslmerge -t sub01/sca/seed1/sca_Z_FWHM_merged.nii
+                    sub02/sca/seed1/sca_Z_FWHM.nii.gz ....
                     merge.nii.gz
-                    
-        arguments 
+
+        arguments
             -t : concatenate images in time
-            
+
     - Create mask specific for analysis. For details see `fslmaths <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/Fslutils>`_::
-    
-        fslmaths merged.nii.gz 
+
+        fslmaths merged.nii.gz
                 -abs -Tmin -bin mean_mask.nii.gz
-        
-        arguments 
+
+        arguments
              -Tmin  : min across time
              -abs   : absolute value
              -bin   : use (current image>0) to binarise
-    
+
     - FSL FLAMEO to perform higher level analysis.  For details see `flameo <http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FEAT>`_::
-        
-        flameo --copefile = merged.nii.gz --covsplitfile = anova_with_meanFD.grp --designfile = anova_with_meanFD.mat 
-               --fcontrastsfile = anova_with_meanFD.fts --ld=stats --maskfile = mean_mask.nii.gz --runmode=ols 
+
+        flameo --copefile = merged.nii.gz --covsplitfile = anova_with_meanFD.grp --designfile = anova_with_meanFD.mat
+               --fcontrastsfile = anova_with_meanFD.fts --ld=stats --maskfile = mean_mask.nii.gz --runmode=ols
                --tcontrastsfile = anova_with_meanFD.con
-           
+
         arguments
             --copefile        : cope regressor data file
             --designfile      : design matrix file
@@ -205,41 +205,49 @@ def create_fsl_flame_wf(ftest=False, wf_name='groupAnalysis'):
             --tcontrastsfile  : file containing an ASCII matrix specifying the t contrasts
             --fcontrastsfile  : file containing an ASCII matrix specifying the f contrasts
             --runmode         : Interference to perform (mixed effects - OLS)
-            
-    - Run FSL Easy thresh 
-        
+
+    - Run FSL Easy thresh
+
       Easy thresh is a simple script for carrying out cluster-based thresholding and colour activation overlaying::
-        
+
         easythresh <raw_zstat> <brain_mask> <z_thresh> <prob_thresh> <background_image> <output_root> [--mm]
-      
+
       A seperate workflow called easythresh is called to run easythresh steps.
-      
+
+    .. exec::
+        from CPAC.group_analysis import create_fsl_flame_wf
+        wf = create_fsl_flame_wf()
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/group_analysis.dot'
+        )
+
     High Level Workflow Graph:
-    
-    .. image:: ../images/group_analysis.dot.png
+
+    .. image:: ../../images/generated/group_analysis.png
        :width: 800
-    
-    
+
+
     Detailed Workflow Graph:
-    
-    .. image:: ../images/group_analysis_detailed.dot.png
+
+    .. image:: ../../images/generated/group_analysis_detailed.png
        :width: 800
 
     Examples
     --------
-    
+
     >>> from group_analysis_preproc import create_group_analysis
     >>> preproc = create_group_analysis()
     >>> preproc.inputs.inputspec.mat_file = '../group_models/anova_with_meanFD/anova_with_meanFD.mat'
     >>> preproc.inputs.inputspec.con_file = '../group_models/anova_with_meanFD/anova_with_meanFD.con'
     >>> preproc.inputs.inputspec.grp_file = '../group_models/anova_with_meanFD/anova_with_meanFD.grp'
-    >>> preproc.inputs.inputspec.zmap_files = ['subjects/sub01/seeds_rest_Dickstein_DLPFC/sca_Z_FWHM.nii.gz', 
+    >>> preproc.inputs.inputspec.zmap_files = ['subjects/sub01/seeds_rest_Dickstein_DLPFC/sca_Z_FWHM.nii.gz',
                                                'subjects/sub02/seeds_rest_Dickstein_DLPFC/sca_Z_FWHM.nii.gz']
     >>> preproc.inputs.inputspec.z_threshold = 2.3
     >>> preproc.inputs.inputspec.p_threshold = 0.05
     >>> preproc.inputs.inputspec.parameters = ('/usr/local/fsl/', 'MNI152')
     >>> preproc.run()  -- SKIP doctest
-            
+
     """
     grp_analysis = pe.Workflow(name=wf_name)
 
@@ -310,10 +318,10 @@ def create_fsl_flame_wf(ftest=False, wf_name='groupAnalysis'):
     # fslmaths merged.nii.gz -abs -bin -Tmean -mul volume out.nii.gz
     # -Tmean: mean across time
     # create group_reg file
-    # this file can provide an idea of how well the subjects 
+    # this file can provide an idea of how well the subjects
     # in our analysis overlay with each other and the MNI brain.
     # e.g., maybe there is one subject with limited coverage.
-    # not attached to sink currently 
+    # not attached to sink currently
     merge_mean_mask = pe.Node(interface=fsl.ImageMaths(),
                               name='merge_mean_mask')
 
@@ -418,15 +426,15 @@ def create_fsl_flame_wf(ftest=False, wf_name='groupAnalysis'):
     return grp_analysis
 
 
-def run_feat_pipeline(group_config, merge_file, merge_mask, f_test, 
-                      mat_file, con_file, grp_file, out_dir, work_dir, log_dir, 
+def run_feat_pipeline(group_config, merge_file, merge_mask, f_test,
+                      mat_file, con_file, grp_file, out_dir, work_dir, log_dir,
                       model_name, fts_file=None):
     '''
     needed:
       - z thresh, p thresh
       - out dir
       - work, crash, log etc.
-      - 
+      -
 
 
     '''
@@ -483,18 +491,17 @@ def run_feat_pipeline(group_config, merge_file, merge_mask, f_test,
     wf.connect(gpa_wf, 'outputspec.fstats', ds, 'stats.unthreshold.@02')
     wf.connect(gpa_wf, 'outputspec.cluster_threshold_zf', ds, 'stats.threshold')
     wf.connect(gpa_wf, 'outputspec.cluster_index_zf', ds, 'stats.clusterMap')
-    wf.connect(gpa_wf, 'outputspec.cluster_localmax_txt_zf', 
+    wf.connect(gpa_wf, 'outputspec.cluster_localmax_txt_zf',
                ds, 'stats.clusterMap.@01')
     wf.connect(gpa_wf, 'outputspec.overlay_threshold_zf', ds, 'rendered')
     wf.connect(gpa_wf, 'outputspec.rendered_image_zf', ds, 'rendered.@01')
-    wf.connect(gpa_wf, 'outputspec.cluster_threshold', 
+    wf.connect(gpa_wf, 'outputspec.cluster_threshold',
                ds, 'stats.threshold.@01')
     wf.connect(gpa_wf, 'outputspec.cluster_index', ds, 'stats.clusterMap.@02')
-    wf.connect(gpa_wf, 'outputspec.cluster_localmax_txt', 
+    wf.connect(gpa_wf, 'outputspec.cluster_localmax_txt',
                ds, 'stats.clusterMap.@03')
     wf.connect(gpa_wf, 'outputspec.overlay_threshold', ds, 'rendered.@02')
     wf.connect(gpa_wf, 'outputspec.rendered_image', ds, 'rendered.@03')
 
     # Run the actual group analysis workflow
     wf.run()
-

@@ -224,16 +224,23 @@ def create_seg_preproc(use_ants,
     >>> seg.inputs.inputspec.brain = '/home/data/Projects/C-PAC/working_directory/s1001/anat_preproc/mprage_brain.nii.gz'
     >>> seg_preproc.run() # doctest: +SKIP
 
+    .. exec::
+        from CPAC.seg_preproc import create_seg_preproc
+        wf = create_seg_preproc(False, False, ['FSL-FAST Thresholding'])
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/seg_preproc.dot'
+        )
 
     High Level Graph:
 
-    .. image:: ../images/seg_preproc.dot.png
+    .. image:: ../../images/generated/seg_preproc.png
         :width: 1100
-        :height: 480
+        :height: 100
 
     Detailed Graph:
 
-    .. image:: ../images/seg_preproc_detailed.dot.png
+    .. image:: ../../images/generated/seg_preproc_detailed.png
         :width: 1100
         :height: 480
     """
@@ -518,16 +525,27 @@ def process_segment_map(wf_name,
 
     - Generate segment mask, by applying tissue prior in t1 space to thresholded binarized segment probability map
 
+    .. exec::
+        from CPAC.seg_preproc import process_segment_map
+        wf = process_segment_map('segment_map_wf',
+                                False,
+                                False,
+                                ['FSL-FAST Thresholding'],
+                                False)
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/process_segment_map.dot'
+        )
 
     High Level Graph:
 
-    .. image:: ../images/process_segment_map.dot.png
+    .. image:: ../../images/generated/process_segment_map.png
         :width: 1100
         :height: 480
 
     Detailed Graph:
 
-    .. image:: ../images/process_segment_map_detailed.dot.png
+    .. image:: ../../images/generated/process_segment_map_detailed.png
         :width: 1100
         :height: 480
 
@@ -569,16 +587,16 @@ def process_segment_map(wf_name,
         preproc.connect(inputNode, 'standard2highres_mat', collect_linear_transforms, 'in3')
 
         # check transform list to exclude Nonetype (missing) init/rig/affine
-        check_transform = pe.Node(util.Function(input_names=['transform_list'], 
+        check_transform = pe.Node(util.Function(input_names=['transform_list'],
                                                 output_names=['checked_transform_list', 'list_length'],
                                                 function=check_transforms), name='{0}_check_transforms'.format(wf_name))
-        
+
         preproc.connect(collect_linear_transforms, 'out', check_transform, 'transform_list')
 
         # generate inverse transform flags, which depends on the number of transforms
-        inverse_transform_flags = pe.Node(util.Function(input_names=['transform_list'], 
+        inverse_transform_flags = pe.Node(util.Function(input_names=['transform_list'],
                                                         output_names=['inverse_transform_flags'],
-                                                        function=generate_inverse_transform_flags), 
+                                                        function=generate_inverse_transform_flags),
                                                         name='{0}_inverse_transform_flags'.format(wf_name))
 
         preproc.connect(check_transform, 'checked_transform_list', inverse_transform_flags, 'transform_list')
@@ -925,16 +943,16 @@ def tissue_mask_template_to_t1(wf_name,
         preproc.connect(inputNode, 'standard2highres_mat', collect_linear_transforms, 'in3')
 
         # check transform list to exclude Nonetype (missing) init/rig/affine
-        check_transform = pe.Node(util.Function(input_names=['transform_list'], 
+        check_transform = pe.Node(util.Function(input_names=['transform_list'],
                                                 output_names=['checked_transform_list', 'list_length'],
                                                 function=check_transforms), name='{0}_check_transforms'.format(wf_name))
-        
+
         preproc.connect(collect_linear_transforms, 'out', check_transform, 'transform_list')
 
         # generate inverse transform flags, which depends on the number of transforms
-        inverse_transform_flags = pe.Node(util.Function(input_names=['transform_list'], 
+        inverse_transform_flags = pe.Node(util.Function(input_names=['transform_list'],
                                                         output_names=['inverse_transform_flags'],
-                                                        function=generate_inverse_transform_flags), 
+                                                        function=generate_inverse_transform_flags),
                                                         name='{0}_inverse_transform_flags'.format(wf_name))
 
         preproc.connect(check_transform, 'checked_transform_list', inverse_transform_flags, 'transform_list')
@@ -990,7 +1008,7 @@ def create_seg_preproc_antsJointLabel_method(wf_name='seg_preproc_templated_base
 
         inputspec.brain : string (existing nifti file)
             Anatomical image(without skull)
-               
+
         inputspec.template_brain : string (existing nifti file)
             Template anatomical image(without skull)
 
@@ -1016,10 +1034,10 @@ def create_seg_preproc_antsJointLabel_method(wf_name='seg_preproc_templated_base
                                                        'anatomical_brain_mask',
                                                        'template_brain_list',
                                                        'template_segmentation_list',
-                                                       'csf_label', 
-                                                       'left_gm_label', 
-                                                       'left_wm_label', 
-                                                       'right_gm_label', 
+                                                       'csf_label',
+                                                       'left_gm_label',
+                                                       'left_wm_label',
+                                                       'right_gm_label',
                                                        'right_wm_label']),
                         name='inputspec')
 
@@ -1030,9 +1048,9 @@ def create_seg_preproc_antsJointLabel_method(wf_name='seg_preproc_templated_base
                         name='outputspec')
 
 
-    seg_preproc_antsJointLabel = pe.Node(util.Function(input_names=['anatomical_brain', 'anatomical_brain_mask', 'template_brain_list', 'template_segmentation_list'], 
+    seg_preproc_antsJointLabel = pe.Node(util.Function(input_names=['anatomical_brain', 'anatomical_brain_mask', 'template_brain_list', 'template_segmentation_list'],
                                                         output_names=['multiatlas_Intensity', 'multiatlas_Labels'],
-                                                        function=hardcoded_antsJointLabelFusion), 
+                                                        function=hardcoded_antsJointLabelFusion),
                                                         name='{0}_antsJointLabel'.format(wf_name))
 
     preproc.connect(inputNode, 'anatomical_brain',
@@ -1042,30 +1060,30 @@ def create_seg_preproc_antsJointLabel_method(wf_name='seg_preproc_templated_base
     preproc.connect(inputNode, 'template_brain_list',
                     seg_preproc_antsJointLabel, 'template_brain_list')
     preproc.connect(inputNode, 'template_segmentation_list',
-                    seg_preproc_antsJointLabel, 'template_segmentation_list')                 
-    
-    pick_tissue = pe.Node(util.Function(input_names=['multiatlas_Labels', 'csf_label', 'left_gm_label', 'left_wm_label', 'right_gm_label', 'right_wm_label'], 
+                    seg_preproc_antsJointLabel, 'template_segmentation_list')
+
+    pick_tissue = pe.Node(util.Function(input_names=['multiatlas_Labels', 'csf_label', 'left_gm_label', 'left_wm_label', 'right_gm_label', 'right_wm_label'],
                                         output_names=['csf_mask', 'gm_mask', 'wm_mask'],
-                                        function=pick_tissue_from_labels_file), 
+                                        function=pick_tissue_from_labels_file),
                                         name='{0}_tissue_mask'.format(wf_name))
-    
+
     preproc.connect(seg_preproc_antsJointLabel, 'multiatlas_Labels',
-                    pick_tissue, 'multiatlas_Labels') 
+                    pick_tissue, 'multiatlas_Labels')
     preproc.connect(inputNode, 'csf_label',
-                    pick_tissue, 'csf_label') 
+                    pick_tissue, 'csf_label')
     preproc.connect(inputNode, 'left_gm_label',
-                    pick_tissue, 'left_gm_label') 
+                    pick_tissue, 'left_gm_label')
     preproc.connect(inputNode, 'left_wm_label',
-                    pick_tissue, 'left_wm_label')                    
+                    pick_tissue, 'left_wm_label')
     preproc.connect(inputNode, 'right_gm_label',
-                    pick_tissue, 'right_gm_label') 
+                    pick_tissue, 'right_gm_label')
     preproc.connect(inputNode, 'right_wm_label',
-                    pick_tissue, 'right_wm_label') 
+                    pick_tissue, 'right_wm_label')
 
     preproc.connect(pick_tissue, 'csf_mask',
                     outputNode, 'csf_mask')
     preproc.connect(pick_tissue, 'gm_mask',
-                    outputNode, 'gm_mask')   
+                    outputNode, 'gm_mask')
     preproc.connect(pick_tissue, 'wm_mask',
                     outputNode, 'wm_mask')
 
@@ -1073,10 +1091,10 @@ def create_seg_preproc_antsJointLabel_method(wf_name='seg_preproc_templated_base
 
 
 def connect_anat_segmentation(workflow, strat_list, c, strat_name=None):
-    
+
     """
     Segmentation Preprocessing Workflow
-    
+
     Parameters
     ----------
         workflow : workflow
@@ -1095,7 +1113,7 @@ def connect_anat_segmentation(workflow, strat_list, c, strat_name=None):
         strat_list : list
             list of updated strategies
     """
-    
+
     from CPAC.seg_preproc.seg_preproc import (
         create_seg_preproc,
         create_seg_preproc_template_based
@@ -1207,12 +1225,12 @@ def connect_anat_segmentation(workflow, strat_list, c, strat_name=None):
                                                     imports = ero_imports),
                                                     name='erode_skullstrip_brain_mask')
                 eroded_mask.inputs.mask_erosion_mm = c.brain_mask_erosion_mm
-                
+
                 node, out_file = strat['anatomical_brain_mask']
-                workflow.connect(node, out_file, 
+                workflow.connect(node, out_file,
                                     eroded_mask, 'skullstrip_mask')
-                
-                workflow.connect(seg_preproc, 'outputspec.csf_probability_map', 
+
+                workflow.connect(seg_preproc, 'outputspec.csf_probability_map',
                                     eroded_mask, 'roi_mask')
 
                 strat.update_resource_pool({'anatomical_eroded_brain_mask': (eroded_mask, 'eroded_skullstrip_mask')})
@@ -1229,7 +1247,7 @@ def connect_anat_segmentation(workflow, strat_list, c, strat_name=None):
             })
 
     strat_list += new_strat_list
-    
+
     if 1 in c.ANTs_prior_based_segmentation:
 
         if 'T1_template' in c.template_based_segmentation or 'EPI_template' in c.template_based_segmentation or 1 in c.runSegmentationPreprocessing:
@@ -1254,7 +1272,7 @@ def connect_anat_segmentation(workflow, strat_list, c, strat_name=None):
             node, out_file = strat['anatomical_brain_mask']
             workflow.connect(node, out_file,
                              seg_preproc_ants_prior_based, 'inputspec.anatomical_brain_mask')
-                             
+
             workflow.connect(c.ANTs_prior_seg_template_brain_list, 'local_path',
                              seg_preproc_ants_prior_based, 'inputspec.template_brain_list')
             workflow.connect(c.ANTs_prior_seg_template_segmentation_list, 'local_path',

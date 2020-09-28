@@ -6,101 +6,101 @@ import nipype.interfaces.utility as util
 
 def easy_thresh(wf_name):
     """
-    Workflow for carrying out cluster-based thresholding 
+    Workflow for carrying out cluster-based thresholding
     and colour activation overlaying
-    
+
     Parameters
     ----------
-    wf_name : string 
+    wf_name : string
         Workflow name
-        
+
     Returns
     -------
-    easy_thresh : object 
+    easy_thresh : object
         Easy thresh workflow object
-    
+
     Notes
     -----
-    
+
     `Source <https://github.com/FCP-INDI/C-PAC/blob/master/CPAC/easy_thresh/easy_thresh.py>`_
-        
+
     Workflow Inputs::
-    
+
         inputspec.z_stats : string (nifti file)
             z_score stats output for t or f contrast from flameo
-        
+
         inputspec.merge_mask : string (nifti file)
             mask generated from 4D Merged derivative file
-        
+
         inputspec.z_threshold : float
-            Z Statistic threshold value for cluster thresholding. It is used to 
-            determine what level of activation would be statistically significant. 
+            Z Statistic threshold value for cluster thresholding. It is used to
+            determine what level of activation would be statistically significant.
             Increasing this will result in higher estimates of required effect.
-        
+
         inputspec.p_threshold : float
             Probability threshold for cluster thresholding.
-        
+
         inputspec.paramerters : string (tuple)
             tuple containing which MNI and FSLDIR path information
-            
+
     Workflow Outputs::
-    
+
         outputspec.cluster_threshold : string (nifti files)
            the thresholded Z statistic image for each t contrast
-        
+
         outputspec.cluster_index : string (nifti files)
-            image of clusters for each t contrast; the values 
-            in the clusters are the index numbers as used 
+            image of clusters for each t contrast; the values
+            in the clusters are the index numbers as used
             in the cluster list.
-        
+
         outputspec.overlay_threshold : string (nifti files)
             3D color rendered stats overlay image for t contrast
-            After reloading this image, use the Statistics Color 
+            After reloading this image, use the Statistics Color
             Rendering GUI to reload the color look-up-table
-        
+
         outputspec.overlay_rendered_image : string (nifti files)
            2D color rendered stats overlay picture for each t contrast
-        
+
         outputspec.cluster_localmax_txt : string (text files)
             local maxima text file, defines the coordinates of maximum value
             in the cluster
-    
-    
+
+
     Order of commands:
-    
+
     - Estimate smoothness of the image::
-        
+
         smoothest --mask= merge_mask.nii.gz --zstat=.../flameo/stats/zstat1.nii.gz
-        
+
         arguments
         --mask  :  brain mask volume
         --zstat :  filename of zstat/zfstat image
-    
+
     - Create mask. For details see `fslmaths <http://www.fmrib.ox.ac.uk/fslcourse/lectures/practicals/intro/index.htm#fslutils>`_::
-        
-        fslmaths ../flameo/stats/zstat1.nii.gz 
-                 -mas merge_mask.nii.gz 
+
+        fslmaths ../flameo/stats/zstat1.nii.gz
+                 -mas merge_mask.nii.gz
                  zstat1_mask.nii.gz
-        
+
         arguments
         -mas   : use (following image>0) to mask current image
 
     - Copy Geometry image dimensions, voxel dimensions, voxel dimensions units string, image orientation/origin or qform/sform info) from one image to another::
-    
+
         fslcpgeom MNI152_T1_2mm_brain.nii.gz zstat1_mask.nii.gz
-    
+
     - Cluster based thresholding. For details see `FEAT <http://www.fmrib.ox.ac.uk/fsl/feat5/detail.html#poststats>`_::
-        
-        cluster --dlh = 0.0023683100 
-                --in = zstat1_mask.nii.gz 
-                --oindex = zstat1_cluster_index.nii.gz 
+
+        cluster --dlh = 0.0023683100
+                --in = zstat1_mask.nii.gz
+                --oindex = zstat1_cluster_index.nii.gz
                 --olmax = zstat1_cluster_localmax.txt
-                --othresh = zstat1_cluster_threshold.nii.gz 
-                --pthresh = 0.0500000000 
-                --thresh = 2.3000000000 
+                --othresh = zstat1_cluster_threshold.nii.gz
+                --pthresh = 0.0500000000
+                --thresh = 2.3000000000
                 --volume = 197071
-                
-        arguments 
+
+        arguments
         --in    :    filename of input volume
         --dlh   :    smoothness estimate = sqrt(det(Lambda))
         --oindex  :  filename for output of cluster index
@@ -109,47 +109,55 @@ def easy_thresh(wf_name):
         --volume  :  number of voxels in the mask
         --pthresh :  p-threshold for clusters
         --thresh  :  threshold for input volume
-        
+
      Z statistic image is thresholded to show which voxels or clusters of voxels are activated at a particular significance level.
-     A Z statistic threshold is used to define contiguous clusters. Then each cluster's estimated significance level (from GRF-theory) 
+     A Z statistic threshold is used to define contiguous clusters. Then each cluster's estimated significance level (from GRF-theory)
      is compared with the cluster probability threshold. Significant clusters are then used to mask the original Z statistic image.
-    
-    - Get the maximum intensity value of the output thresholded image. This used is while rendering the Z statistic image:: 
-        
+
+    - Get the maximum intensity value of the output thresholded image. This used is while rendering the Z statistic image::
+
         fslstats zstat1_cluster_threshold.nii.gz -R
-        
+
         arguments
         -R  : output <min intensity> <max intensity>
 
     - Rendering. For details see `FEAT <http://www.fmrib.ox.ac.uk/fsl/feat5/detail.html#poststats>`_::
-         
-        overlay 1 0 MNI152_T1_2mm_brain.nii.gz 
-               -a zstat1_cluster_threshold.nii.gz 
-               2.30 15.67 
+
+        overlay 1 0 MNI152_T1_2mm_brain.nii.gz
+               -a zstat1_cluster_threshold.nii.gz
+               2.30 15.67
                zstat1_cluster_threshold_overlay.nii.gz
-               
-        slicer zstat1_cluster_threshold_overlay.nii.gz 
-               -L  -A 750 
+
+        slicer zstat1_cluster_threshold_overlay.nii.gz
+               -L  -A 750
                zstat1_cluster_threshold_overlay.png
-    
-      The Z statistic range selected for rendering is automatically calculated by default, 
-      to run from red (minimum Z statistic after thresholding) to yellow (maximum Z statistic, here 
+
+      The Z statistic range selected for rendering is automatically calculated by default,
+      to run from red (minimum Z statistic after thresholding) to yellow (maximum Z statistic, here
       maximum intensity).
-      
+
     High Level Workflow Graph:
-    
-    .. image:: ../images/easy_thresh.dot.png
+
+    .. exec::
+        from CPAC.easy_thresh import easy_thresh
+        wf = easy_thresh()
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/easy_thresh.dot'
+        )
+
+    .. image:: ../../images/generated/easy_thresh.png
        :width: 800
-    
-    
+
+
     Detailed Workflow Graph:
-    
-    .. image:: ../images/easy_thresh_detailed.dot.png
+
+    .. image:: ../../images/generated/generated.easy_thresh_detailed.png
        :width: 800
-               
+
     Examples
     --------
-    
+
     >>> import easy_thresh
     >>> preproc = easy_thresh.easy_thresh("new_workflow")
     >>> preproc.inputs.inputspec.z_stats= 'flameo/stats/zstat1.nii.gz'
@@ -158,7 +166,7 @@ def easy_thresh(wf_name):
     >>> preproc.inputs.inputspec.p_threshold = 0.05
     >>> preproc.inputs.inputspec.parameters = ('/usr/local/fsl/', 'MNI152')
     >>> preporc.run()  -- SKIP doctest
-    
+
     """
 
     easy_thresh = pe.Workflow(name=wf_name)
@@ -192,8 +200,8 @@ def easy_thresh(wf_name):
     zstat_mask.inputs.op_string = '-mas %s'
 
     # fslcpgeom
-    #copy certain parts of the header information (image dimensions, 
-    #voxel dimensions, voxel dimensions units string, image orientation/origin 
+    #copy certain parts of the header information (image dimensions,
+    #voxel dimensions, voxel dimensions units string, image orientation/origin
     #or qform/sform info) from one image to another
     geo_imports = ['import subprocess']
     copy_geometry = pe.MapNode(util.Function(input_names=['infile_a', 'infile_b'],
@@ -204,15 +212,15 @@ def easy_thresh(wf_name):
                                              iterfield=['infile_a', 'infile_b'])
 
     ##cluster-based thresholding
-    #After carrying out the initial statistical test, the resulting 
-    #Z statistic image is then normally thresholded to show which voxels or 
+    #After carrying out the initial statistical test, the resulting
+    #Z statistic image is then normally thresholded to show which voxels or
     #clusters of voxels are activated at a particular significance level.
-    #A Z statistic threshold is used to define contiguous clusters. 
-    #Then each cluster's estimated significance level (from GRF-theory) is 
-    #compared with the cluster probability threshold. Significant clusters 
-    #are then used to mask the original Z statistic image for later production 
-    #of colour blobs.This method of thresholding is an alternative to 
-    #Voxel-based correction, and is normally more sensitive to activation. 
+    #A Z statistic threshold is used to define contiguous clusters.
+    #Then each cluster's estimated significance level (from GRF-theory) is
+    #compared with the cluster probability threshold. Significant clusters
+    #are then used to mask the original Z statistic image for later production
+    #of colour blobs.This method of thresholding is an alternative to
+    #Voxel-based correction, and is normally more sensitive to activation.
 #    cluster = pe.MapNode(interface=fsl.Cluster(),
 #                            name='cluster',
 #                            iterfield=['in_file', 'volume', 'dlh'])
@@ -342,9 +350,9 @@ def easy_thresh(wf_name):
 
 
 def call_cluster(in_file, volume, dlh, threshold, pthreshold, parameters):
-  
+
     out_name = re.match('z(\w)*stat(\d)+', os.path.basename(in_file))
-    
+
     filename, ext = os.path.splitext(os.path.basename(in_file))
     ext=  os.path.splitext(filename)[1] + ext
     filename = os.path.splitext(filename)[0]
@@ -355,15 +363,15 @@ def call_cluster(in_file, volume, dlh, threshold, pthreshold, parameters):
         out_name = filename
 
     FSLDIR = parameters[0]
-    
+
     index_file = os.path.join(os.getcwd(), 'cluster_mask_' + out_name + ext)
     threshold_file = os.path.join(os.getcwd(), 'thresh_' + out_name + ext)
     localmax_txt_file = os.path.join(os.getcwd(), 'cluster_' + out_name + '.txt')
 
-    cmd_path = os.path.join(FSLDIR, 'bin/cluster')    
-        
+    cmd_path = os.path.join(FSLDIR, 'bin/cluster')
+
     f = open(localmax_txt_file,'wb')
-    
+
     cmd = sb.Popen([ cmd_path,
                     '--dlh=' + str(dlh),
                     '--in=' + in_file,
@@ -373,39 +381,39 @@ def call_cluster(in_file, volume, dlh, threshold, pthreshold, parameters):
                     '--thresh=' +  str(threshold),
                     '--volume=' + str(volume)],
                     stdout= f)
-        
+
     stdout_value, stderr_value = cmd.communicate()
     f.close()
-    
+
     return index_file, threshold_file, localmax_txt_file
-    
- 
+
+
 def copy_geom(infile_a, infile_b):
     """
-    Method to call fsl fslcpgeom command to copy 
-    certain parts of the header information (image dimensions, 
-    voxel dimensions, voxel dimensions units string, image 
+    Method to call fsl fslcpgeom command to copy
+    certain parts of the header information (image dimensions,
+    voxel dimensions, voxel dimensions units string, image
     orientation/origin or qform/sform info) from one image to another
-    
+
     Parameters
     -----------
     infile_a : nifti file
         input volume from which the geometry is copied from
-    
+
     infile_b : nifti file
        input volume from which the geometry is copied to
-       
+
     Returns
-    -------    
+    -------
     out_file : nifti file
         Input volume infile_b with modified geometry information
         in the header.
-        
+
     Raises
     ------
-    Exception 
+    Exception
         If fslcpgeom fails
-    
+
     """
 
     try:
@@ -415,30 +423,30 @@ def copy_geom(infile_a, infile_b):
         return out_file
     except Exception:
         raise Exception("Error while using fslcpgeom to copy geometry")
-    
+
 
 def get_standard_background_img(in_file, file_parameters):
     """
-    Method to get the standard brain image from FSL 
+    Method to get the standard brain image from FSL
     standard data directory
-    
+
     Parameters
     ----------
     in_file : nifti file
         Merged 4D Zmap volume
     file_parameters : tuple
        Value FSLDIR and MNI from config file
-    
+
     Returns
     -------
     standard_path : string
         Standard FSL Image file path
-    
+
     Raises
     ------
-    Exception 
+    Exception
         If nibabel cannot load the input nifti volume
-    
+
     """
 
     try:
@@ -462,23 +470,20 @@ def get_tuple(infile_a, infile_b):
     Simple method to return tuple of z_threhsold
     maximum intensity values of Zstatistic image
     for input to the overlay.
-    
+
     Parameters
     ----------
     z_theshold : float
         z threshold value
     intensity_stat : tuple of float values
         minimum and maximum intensity values
-    
+
     Returns
     -------
     img_min_max : tuple (float)
-        tuple of zthreshold and maximum intensity 
+        tuple of zthreshold and maximum intensity
         value of z statistic image
-    
+
     """
     out_file = (infile_a, infile_b[1])
     return out_file
-
-
-

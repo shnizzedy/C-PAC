@@ -72,7 +72,7 @@ def create_fsl_fnirt_nonlinear_reg(name='fsl_fnirt_nonlinear_reg'):
 
     Notes
     -----
-    
+
     Workflow Inputs::
 
         inputspec.input_skull : string (nifti file)
@@ -82,32 +82,40 @@ def create_fsl_fnirt_nonlinear_reg(name='fsl_fnirt_nonlinear_reg'):
         inputspec.fnirt_config : string (fsl fnirt config file)
             Configuration file containing parameters that can be specified in fnirt
     Workflow Outputs::
-    
+
         outputspec.output_brain : string (nifti file)
             Normalizion of input brain file
         outputspec.nonlinear_xfm : string
             Nonlinear field coefficients file of nonlinear transformation
-            
+
     Registration Procedure:
 
     1. Perform a nonlinear registration on an input file to the reference file utilizing affine
        transformation from the previous step as a starting point.
     2. Invert the affine transformation to provide the user a transformation (affine only) from the
        space of the reference file to the input file.
-       
+
+    .. exec::
+        from CPAC.registration import create_fsl_fnirt_nonlinear_reg
+        wf = create_fsl_fnirt_nonlinear_reg()
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/nonlinear_register.dot'
+        )
+
     Workflow Graph:
-    
-    .. image:: ../images/nonlinear_register.dot.png
+
+    .. image:: ../../images/generated/nonlinear_register.png
         :width: 500
-    
+
     Detailed Workflow Graph:
-    
-    .. image:: ../images/nonlinear_register_detailed.dot.png
-        :width: 500    
-       
+
+    .. image:: ../../images/generated/nonlinear_register_detailed.png
+        :width: 500
+
     """
     nonlinear_register = pe.Workflow(name=name)
-    
+
     inputspec = pe.Node(util.IdentityInterface(fields=['input_brain',
                                                        'input_skull',
                                                        'reference_brain',
@@ -117,20 +125,20 @@ def create_fsl_fnirt_nonlinear_reg(name='fsl_fnirt_nonlinear_reg'):
                                                        'linear_aff',
                                                        'fnirt_config']),
                         name='inputspec')
-    
+
     outputspec = pe.Node(util.IdentityInterface(fields=['output_brain',
                                                         'nonlinear_xfm']),
                          name='outputspec')
 
     nonlinear_reg = pe.Node(interface=fsl.FNIRT(),
                             name='nonlinear_reg_1')
-    
+
     nonlinear_reg.inputs.fieldcoeff_file = True
     nonlinear_reg.inputs.jacobian_file = True
 
     brain_warp = pe.Node(interface=fsl.ApplyWarp(),
                          name='brain_warp')
-                         
+
     nonlinear_register.connect(inputspec, 'input_skull',
                                nonlinear_reg, 'in_file')
 
@@ -142,7 +150,7 @@ def create_fsl_fnirt_nonlinear_reg(name='fsl_fnirt_nonlinear_reg'):
 
     nonlinear_register.connect(inputspec, 'ref_mask',
                                nonlinear_reg, 'refmask_file')
-    
+
     # FNIRT parameters are specified by FSL config file
     # ${FSLDIR}/etc/flirtsch/TI_2_MNI152_2mm.cnf (or user-specified)
     nonlinear_register.connect(inputspec, 'fnirt_config',
@@ -165,13 +173,13 @@ def create_fsl_fnirt_nonlinear_reg(name='fsl_fnirt_nonlinear_reg'):
 
     nonlinear_register.connect(brain_warp, 'out_file',
                                outputspec, 'output_brain')
-    
+
     return nonlinear_register
 
 
 def create_register_func_to_mni(name='register_func_to_mni'):
     """
-    Registers a functional scan in native space to MNI standard space.  This is meant to be used 
+    Registers a functional scan in native space to MNI standard space.  This is meant to be used
     after create_nonlinear_register() has been run and relies on some of it's outputs.
 
     Parameters
@@ -185,7 +193,7 @@ def create_register_func_to_mni(name='register_func_to_mni'):
 
     Notes
     -----
-    
+
     Workflow Inputs::
 
         inputspec.func : string (nifti file)
@@ -200,9 +208,9 @@ def create_register_func_to_mni(name='register_func_to_mni'):
             Corresponding anatomical native space to MNI warp file
         inputspec.anat_to_mni_linear_xfm : string (mat file)
             Corresponding anatomical native space to MNI mat file
-            
+
     Workflow Outputs::
-    
+
         outputspec.func_to_anat_linear_xfm : string (mat file)
             Affine transformation from functional to anatomical native space
         outputspec.func_to_mni_linear_xfm : string (mat file)
@@ -211,19 +219,27 @@ def create_register_func_to_mni(name='register_func_to_mni'):
             Affine transformation from MNI to functional space
         outputspec.mni_func : string (nifti file)
             Functional scan registered to MNI standard space
-            
+
+    .. exec::
+        from CPAC.registration import create_register_func_to_mni
+        wf = create_register_func_to_mni()
+        wf.write_graph(
+            graph2use='orig',
+            dotfilename='./images/generated/register_func_to_mni.dot'
+        )
+
     Workflow Graph:
-    
-    .. image:: ../images/register_func_to_mni.dot.png
+
+    .. image:: ../../images/generated/register_func_to_mni.png
         :width: 500
-        
+
     Detailed Workflow Graph:
-    
-    .. image:: ../images/register_func_to_mni_detailed.dot.png
+
+    .. image:: ../../images/generated/register_func_to_mni_detailed.png
         :width: 500
     """
     register_func_to_mni = pe.Workflow(name=name)
-    
+
     inputspec = pe.Node(util.IdentityInterface(fields=['func',
                                                        'mni',
                                                        'anat',
@@ -236,15 +252,15 @@ def create_register_func_to_mni(name='register_func_to_mni'):
                                                         'mni_to_func_linear_xfm',
                                                         'mni_func']),
                          name='outputspec')
-    
+
     linear_reg = pe.Node(interface=fsl.FLIRT(),
                          name='linear_func_to_anat')
     linear_reg.inputs.cost = 'corratio'
     linear_reg.inputs.dof = 6
-    
+
     mni_warp = pe.Node(interface=fsl.ApplyWarp(),
                        name='mni_warp')
-    
+
     mni_affine = pe.Node(interface=fsl.ConvertXFM(),
                          name='mni_affine')
     mni_affine.inputs.concat_xfm = True
@@ -254,7 +270,7 @@ def create_register_func_to_mni(name='register_func_to_mni'):
                                  mni_affine, 'in_file')
     register_func_to_mni.connect(mni_affine, 'out_file',
                                  outputspec, 'func_to_mni_linear_xfm')
-        
+
     inv_mni_affine = pe.Node(interface=fsl.ConvertXFM(),
                             name='inv_mni_affine')
     inv_mni_affine.inputs.invert_xfm = True
@@ -269,14 +285,14 @@ def create_register_func_to_mni(name='register_func_to_mni'):
                                  linear_reg, 'reference')
     register_func_to_mni.connect(inputspec, 'interp',
                                  linear_reg, 'interp')
-    
+
     register_func_to_mni.connect(inputspec, 'func',
                                  mni_warp, 'in_file')
     register_func_to_mni.connect(inputspec, 'mni',
                                  mni_warp, 'ref_file')
     register_func_to_mni.connect(inputspec, 'anat_to_mni_nonlinear_xfm',
                                  mni_warp, 'field_file')
-    
+
     register_func_to_mni.connect(linear_reg, 'out_matrix_file',
                                  mni_warp, 'premat')
 
@@ -284,13 +300,13 @@ def create_register_func_to_mni(name='register_func_to_mni'):
                                  outputspec, 'func_to_anat_linear_xfm')
     register_func_to_mni.connect(mni_warp, 'out_file',
                                  outputspec, 'mni_func')
-    
+
     return register_func_to_mni
 
 
 def create_register_func_to_anat(phase_diff_distcor=False,
                                  name='register_func_to_anat'):
-    
+
     """
     Registers a functional scan in native space to anatomical space using a
     linear transform and does not include bbregister.
@@ -309,7 +325,7 @@ def create_register_func_to_anat(phase_diff_distcor=False,
 
     Notes
     -----
-    
+
     Workflow Inputs::
 
         inputspec.func : string (nifti file)
@@ -318,18 +334,18 @@ def create_register_func_to_anat(phase_diff_distcor=False,
             Corresponding anatomical scan of subject
         inputspec.interp : string
             Type of interpolation to use ('trilinear' or 'nearestneighbour' or 'sinc')
-            
+
     Workflow Outputs::
-    
+
         outputspec.func_to_anat_linear_xfm_nobbreg : string (mat file)
             Affine transformation from functional to anatomical native space
         outputspec.anat_func_nobbreg : string (nifti file)
             Functional scan registered to anatomical space
-            
+
     """
-    
+
     register_func_to_anat = pe.Workflow(name=name)
-    
+
     inputspec = pe.Node(util.IdentityInterface(fields=['func',
                                                        'anat',
                                                        'interp',
@@ -347,12 +363,12 @@ def create_register_func_to_anat(phase_diff_distcor=False,
     outputspec = pe.Node(util.IdentityInterface(fields=['func_to_anat_linear_xfm_nobbreg',
                                                         'anat_func_nobbreg']),
                          name='outputspec')
-    
+
     linear_reg = pe.Node(interface=fsl.FLIRT(),
                          name='linear_func_to_anat')
     linear_reg.inputs.cost = 'corratio'
     linear_reg.inputs.dof = 6
-    
+
     #if fieldmap_distortion:
 
     def convert_pedir(pedir):
@@ -381,9 +397,9 @@ def create_register_func_to_anat(phase_diff_distcor=False,
                                       linear_reg, 'echospacing')
 
     register_func_to_anat.connect(inputspec, 'func', linear_reg, 'in_file')
-    
+
     register_func_to_anat.connect(inputspec, 'anat', linear_reg, 'reference')
-    
+
     register_func_to_anat.connect(inputspec, 'interp', linear_reg, 'interp')
 
     register_func_to_anat.connect(linear_reg, 'out_matrix_file',
@@ -398,9 +414,9 @@ def create_register_func_to_anat(phase_diff_distcor=False,
 
 def create_bbregister_func_to_anat(phase_diff_distcor=False,
                                    name='bbregister_func_to_anat'):
-  
+
     """
-    Registers a functional scan in native space to structural.  This is meant to be used 
+    Registers a functional scan in native space to structural.  This is meant to be used
     after create_nonlinear_register() has been run and relies on some of it's outputs.
 
     Parameters
@@ -430,18 +446,18 @@ def create_bbregister_func_to_anat(phase_diff_distcor=False,
             White matter segmentation probability mask in anatomical space
         inputspec.bbr_schedule : string (.sch file)
             Boundary based registration schedule file for flirt command
-        
+
     Workflow Outputs::
-    
+
         outputspec.func_to_anat_linear_xfm : string (mat file)
             Affine transformation from functional to anatomical native space
         outputspec.anat_func : string (nifti file)
             Functional data in anatomical space
-            
+
     """
-    
+
     register_bbregister_func_to_anat = pe.Workflow(name=name)
-    
+
     inputspec = pe.Node(util.IdentityInterface(fields=['func',
                                                        'anat_skull',
                                                        'linear_reg_matrix',
@@ -475,20 +491,20 @@ def create_bbregister_func_to_anat(phase_diff_distcor=False,
 
     bbreg_func_to_anat = pe.Node(interface=fsl.FLIRT(),
                                  name='bbreg_func_to_anat')
-    bbreg_func_to_anat.inputs.dof = 6    
- 
+    bbreg_func_to_anat.inputs.dof = 6
+
     register_bbregister_func_to_anat.connect(inputspec, 'bbr_schedule',
                                  bbreg_func_to_anat, 'schedule')
- 
+
     register_bbregister_func_to_anat.connect(wm_bb_mask, ('out_file', bbreg_args),
                                  bbreg_func_to_anat, 'args')
- 
+
     register_bbregister_func_to_anat.connect(inputspec, 'func',
                                  bbreg_func_to_anat, 'in_file')
- 
+
     register_bbregister_func_to_anat.connect(inputspec, 'anat_skull',
                                  bbreg_func_to_anat, 'reference')
- 
+
     register_bbregister_func_to_anat.connect(inputspec, 'linear_reg_matrix',
                                  bbreg_func_to_anat, 'in_matrix_file')
 
@@ -521,17 +537,17 @@ def create_bbregister_func_to_anat(phase_diff_distcor=False,
 
     register_bbregister_func_to_anat.connect(bbreg_func_to_anat, 'out_matrix_file',
                                  outputspec, 'func_to_anat_linear_xfm')
-    
+
     register_bbregister_func_to_anat.connect(bbreg_func_to_anat, 'out_file',
                                  outputspec, 'anat_func')
-    
+
     return register_bbregister_func_to_anat
-    
+
 
 def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', reg_ants_skull=1):
 
     register_func_to_epi = pe.Workflow(name=name)
-    
+
     inputspec = pe.Node(util.IdentityInterface(fields=['func_4d',
                                                        'func_3d',
                                                        'func_3d_mask',
@@ -543,8 +559,8 @@ def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', 
     outputspec = pe.Node(util.IdentityInterface(fields=['ants_initial_xfm',
                                                         'ants_rigid_xfm',
                                                         'ants_affine_xfm',
-                                                        'warp_field', 
-                                                        'inverse_warp_field', 
+                                                        'warp_field',
+                                                        'inverse_warp_field',
                                                         'fsl_flirt_xfm',
                                                         'fsl_fnirt_xfm',
                                                         'invlinear_xfm',
@@ -556,8 +572,8 @@ def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', 
         # linear + non-linear registration
         func_to_epi_ants = \
             create_wf_calculate_ants_warp(
-                name='func_to_epi_ants', 
-                num_threads=1, 
+                name='func_to_epi_ants',
+                num_threads=1,
                 reg_ants_skull=1)
 
         register_func_to_epi.connect([
@@ -576,7 +592,7 @@ def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', 
                 ('outputspec.ants_initial_xfm', 'ants_initial_xfm'),
                 ('outputspec.ants_rigid_xfm', 'ants_rigid_xfm'),
                 ('outputspec.ants_affine_xfm', 'ants_affine_xfm'),
-                ('outputspec.warp_field', 'warp_field'),  
+                ('outputspec.warp_field', 'warp_field'),
                 ('outputspec.inverse_warp_field', 'inverse_warp_field'),
             ]),
         ])
@@ -593,14 +609,14 @@ def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', 
         ])
 
         # check transform list to exclude Nonetype (missing) init/rig/affine
-        check_transform = pe.Node(util.Function(input_names=['transform_list'], 
+        check_transform = pe.Node(util.Function(input_names=['transform_list'],
                                                 output_names=['checked_transform_list', 'list_length'],
                                                 function=check_transforms), name='{0}_check_transforms'.format(name))
-        
+
         register_func_to_epi.connect(collect_transforms, 'out', check_transform, 'transform_list')
 
 
-        # apply transform to func 
+        # apply transform to func
         func_in_epi = pe.Node(interface=ants.ApplyTransforms(), name='func_in_epi_ants')
         func_in_epi.inputs.dimension = 3
         func_in_epi.inputs.input_image_type = 3
@@ -619,14 +635,14 @@ def create_register_func_to_epi(name='register_func_to_epi', reg_option='ANTS', 
         # register_func_to_epi.connect(func_mask_in_epi, 'output_image', outputspec, 'func_mask_in_epi')
 
     elif reg_option == 'FSL':
-        # flirt linear registration 
+        # flirt linear registration
         func_to_epi_linear = pe.Node(interface=fsl.FLIRT(), name='func_to_epi_linear_fsl')
         func_to_epi_linear.inputs.dof = 6
 
         register_func_to_epi.connect(inputspec, 'func_3d', func_to_epi_linear, 'in_file')
         register_func_to_epi.connect(inputspec, 'epi', func_to_epi_linear, 'reference')
         register_func_to_epi.connect(func_to_epi_linear, 'out_matrix_file', outputspec, 'fsl_flirt_xfm')
-        
+
         inv_flirt_xfm = pe.Node(interface=fsl.utils.ConvertXFM(), name='inv_linear_reg0_xfm')
         inv_flirt_xfm.inputs.invert_xfm = True
 
@@ -699,9 +715,9 @@ def create_wf_calculate_ants_warp(name='create_wf_calculate_ants_warp', num_thre
     In some cases, when a parameter is not needed for a stage, 'None' must be
     entered in its place if there are other parameters for other stages.
 
-    
+
     Workflow Inputs::
-    
+
         inputspec.moving_brain : string (nifti file)
             File of brain to be normalized (registered)
         inputspec.reference_brain : string (nifti file)
@@ -750,7 +766,7 @@ def create_wf_calculate_ants_warp(name='create_wf_calculate_ants_warp', num_thre
             Type of interpolation to use ('Linear' or 'BSpline' or 'LanczosWindowedSinc')
 
     Workflow Outputs::
-    
+
         outputspec.warp_field : string (nifti file)
             Output warp field of registration
         outputspec.inverse_warp_field : string (nifti file)
@@ -764,20 +780,20 @@ def create_wf_calculate_ants_warp(name='create_wf_calculate_ants_warp', num_thre
             linear warps
         outputspec.normalized_output_brain : string (nifti file)
             Template-registered version of input brain
-            
+
     Registration Procedure:
-    
+
     1. Calculates a nonlinear anatomical-to-template registration.
 
     Workflow Graph:
-    
-    .. image:: 
+
+    .. image::
         :width: 500
 
     Detailed Workflow Graph:
-    
-    .. image:: 
-        :width: 500      
+
+    .. image::
+        :width: 500
     '''
 
     calc_ants_warp_wf = pe.Workflow(name=name)
@@ -789,7 +805,7 @@ def create_wf_calculate_ants_warp(name='create_wf_calculate_ants_warp', num_thre
                 'reference_skull',
                 'fixed_image_mask',
                 'ants_para',
-                'interp']), 
+                'interp']),
                 name='inputspec')
 
     outputspec = pe.Node(util.IdentityInterface(
@@ -931,7 +947,7 @@ def connect_func_to_anat_init_reg(workflow, strat_list, c):
     new_strat_list = []
 
     diff_complete = False
-    
+
     if 1 in c.runRegisterFuncToAnat:
 
         for num_strat, strat in enumerate(strat_list):
@@ -1142,7 +1158,7 @@ def connect_func_to_anat_bbreg(workflow, strat_list, c, diff_complete):
 
 
 def connect_func_to_template_reg(workflow, strat_list, c):
-    
+
     from CPAC.registration import output_func_to_standard
 
     new_strat_list = []
@@ -1202,7 +1218,7 @@ def connect_func_to_template_reg(workflow, strat_list, c):
                 if reg.lower() == 'fsl':
                     strat.update_resource_pool({
                         'epi_registration_method': 'FSL',
-                        'func_to_epi_linear_xfm': (func_to_epi, 'outputspec.fsl_flirt_xfm'),  
+                        'func_to_epi_linear_xfm': (func_to_epi, 'outputspec.fsl_flirt_xfm'),
                         'func_to_epi_nonlinear_xfm': (func_to_epi, 'outputspec.fsl_fnirt_xfm'),
                         'epi_to_func_linear_xfm': (func_to_epi, 'outputspec.invlinear_xfm'),
                     })
