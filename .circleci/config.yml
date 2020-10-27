@@ -138,7 +138,7 @@ jobs:
             if [[ ! $(git log -1 --pretty=%B) == *"Update version to"* ]]
             then
               cd $HOME/project/CPAC
-              VERSION=$(python -c "from info import __version__; print(__version__)")
+              VERSION=$(python -c "from info import __version__; print('.'.join(('.'.join(__version__[::-1].split('-')[1].split('.')[1:])[::-1], __version__.split('-')[1])) if '-' in __version__ else __version__)")
               cd ..
               echo "v${VERSION}" > version
               sed -i -r "s/^(# [Vv]ersion ).*$/# Version ${VERSION}/g" dev/docker_data/default_pipeline.yml
