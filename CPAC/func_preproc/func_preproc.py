@@ -548,7 +548,8 @@ def create_wf_edit_func(wf_name="edit_func"):
 
     # allocate a node to edit the functional file
     func_drop_trs = pe.Node(interface=afni_utils.Calc(),
-                            name='func_drop_trs')
+                            name='func_drop_trs',
+                            mem_gb=2.0)
 
     func_drop_trs.inputs.expr = 'a'
     func_drop_trs.inputs.outputtype = 'NIFTI_GZ'
@@ -807,14 +808,16 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
                           name='outputspec')
 
     func_deoblique = pe.Node(interface=afni_utils.Refit(),
-                             name='func_deoblique')
+                             name='func_deoblique',
+                             mem_gb=2.0)
     func_deoblique.inputs.deoblique = True
 
     preproc.connect(input_node, 'func',
                     func_deoblique, 'in_file')
 
     func_reorient = pe.Node(interface=afni_utils.Resample(),
-                            name='func_reorient')
+                            name='func_reorient',
+                            mem_gb=2.0)
 
     func_reorient.inputs.orientation = 'RPI'
     func_reorient.inputs.outputtype = 'NIFTI_GZ'
@@ -832,7 +835,8 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
                                      output_names=['TR_ranges'],
                                      function=chunk_ts,
                                      imports=chunk_imports),
-                            name='chunk')
+                            name='chunk',
+                            mem_gb=0.5)
 
             chunk.inputs.n_cpus = int(config.pipeline_setup['system_config']['max_cores_per_participant'])
             preproc.connect(func_reorient, 'out_file', chunk, 'func_file')
@@ -843,7 +847,8 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
                                      output_names=['split_funcs'],
                                      function=split_ts_chunks,
                                      imports=split_imports),
-                            name='split')
+                            name='split',
+                            mem_gb=2.0)
 
             preproc.connect(func_reorient, 'out_file', split, 'func_file')
             preproc.connect(chunk, 'TR_ranges', split, 'tr_ranges')
@@ -924,7 +929,8 @@ def create_func_preproc(skullstrip_tool, motion_correct_tool,
     # Calculate motion correction reference
     if motion_correct_ref == 'mean': 
         func_get_mean_RPI = pe.Node(interface=afni_utils.TStat(),
-                                    name='func_get_mean_RPI')
+                                    name='func_get_mean_RPI',
+                                    mem_gb=2.0)
 
         func_get_mean_RPI.inputs.options = '-mean'
         func_get_mean_RPI.inputs.outputtype = 'NIFTI_GZ'
@@ -1352,7 +1358,8 @@ def slice_timing_wf(name='slice_timing'):
 
     # create TShift AFNI node
     func_slice_timing_correction = pe.Node(interface=preprocess.TShift(),
-                                           name='slice_timing')
+                                           name='slice_timing',
+                                           mem_gb=2.0)
     func_slice_timing_correction.inputs.outputtype = 'NIFTI_GZ'
 
 

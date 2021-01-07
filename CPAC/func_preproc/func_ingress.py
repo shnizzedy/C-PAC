@@ -162,7 +162,7 @@ def connect_func_ingress(workflow, strat_list, c, sub_dict, subject_id,
                               'pe_direction'],
                 function=get_scan_params,
                 as_module=True
-            ), name=workflow_name)
+            ), name=workflow_name, mem_gb=0.5)
         
         if "Selected Functional Volume" in c.functional_registration['1-coregistration']['func_input_prep']['input']:
             get_func_volume = pe.Node(interface=afni.Calc(),
