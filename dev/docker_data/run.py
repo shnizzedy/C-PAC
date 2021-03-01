@@ -543,17 +543,25 @@ elif args.analysis_level in ["test_config", "participant"]:
 
     if args.save_working_dir is not False:
         c['pipeline_setup']['working_directory']['remove_working_dir'] = False
-        if args.save_working_dir is not None:
-            c['pipeline_setup']['working_directory']['path'] = \
-                os.path.abspath(args.save_working_dir)
-        elif "s3://" not in args.output_dir.lower():
+    if isinstance(args.save_working_dir, str):
+        c['pipeline_setup']['working_directory']['path'] = \
+            os.path.abspath(args.save_working_dir)
+    elif 's3://' not in c['pipeline_setup']['working_directory']['path'].lower(
+    ):
+        # make sure we can write to the specified working directory
+        try:
+            os.makedirs(c['pipeline_setup']['working_directory']['path'],
+                        exist_ok=True)
+        # if not, make the working directory 'working' within output directory
+        except PermissionError:
             c['pipeline_setup']['working_directory']['path'] = \
                 os.path.join(args.output_dir, "working")
-        else:
-            print('Cannot write working directory to S3 bucket.'
-                ' Either change the output directory to something'
-                ' local or turn off the --save_working_dir flag')
-
+            os.makedirs(c['pipeline_setup']['working_directory']['path'],
+                        exist_ok=True)
+    else:
+        print('Cannot write working directory to S3 bucket.'
+              ' Either change the output directory to something'
+              ' local or turn off the --save_working_dir flag')
 
     if args.participant_label:
         print(
