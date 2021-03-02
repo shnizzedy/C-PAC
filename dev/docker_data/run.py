@@ -412,7 +412,7 @@ elif args.analysis_level in ["test_config", "participant"]:
         not os.path.exists(args.output_dir):
 
         try:
-            os.makedirs(args.output_dir)
+            os.makedirs(args.output_dir, exist_ok=True)
         except:
             print("Error! Could not find/create output dir {0}".format(
                 args.output_dir
