@@ -204,11 +204,11 @@ jobs:
             fi
       - build-images
       - save_cache:
-          key: cpac-docker-image-{{ .Revision }}
+          key: cpac-docker-image-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
           paths:
             - /home/circleci/project/cpac-docker-image.tar.gz
       - save_cache:
-          key: cpac-singularity-image-{{ .Revision }}
+          key: cpac-singularity-image-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
           paths:
             - /home/circleci/project/cpac-singularity-image.simg
       - store_artifacts:
@@ -224,11 +224,11 @@ jobs:
       - build-images:
           variant: lite
       - save_cache:
-          key: cpac-docker-image-lite-{{ .Revision }}
+          key: cpac-docker-image-lite-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
           paths: 
             - /home/circleci/project/cpac-docker-image-lite.tar.gz
       - save_cache:
-          key: cpac-singularity-image-lite-{{ .Revision }}
+          key: cpac-singularity-image-lite-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
           paths: 
             - /home/circleci/project/cpac-singularity-image-lite.simg
       - store_artifacts:
@@ -259,8 +259,8 @@ jobs:
           variant: "<< parameters.variant >>"
       - restore_cache:
           keys: 
-            - cpac-docker-image-<< parameters.variant >>-{{ .Revision }}
-            - cpac-docker-image<< parameters.variant >>-{{ .Revision }}
+            - cpac-docker-image-<< parameters.variant >>-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
+            - cpac-docker-image<< parameters.variant >>-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
       - check-for-built-images
       - set-python-version
       - get-sample-bids-data
@@ -284,8 +284,8 @@ jobs:
           variant: "<< parameters.variant >>"
       - restore_cache:
           keys: 
-            - cpac-singularity-image-<< parameters.variant >>-{{ .Revision }}
-            - cpac-singularity-image<< parameters.variant >>-{{ .Revision }}
+            - cpac-singularity-image-<< parameters.variant >>-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
+            - cpac-singularity-image<< parameters.variant >>-{{ checksum "Dockerfile" }}_{{ checksum "CPAC" }}
       - check-for-built-images
       - set-python-version
       - get-singularity
