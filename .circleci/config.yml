@@ -203,15 +203,18 @@ jobs:
               cd ..
             fi
       - build-images
+      - save_cache:
+          key: cpac-docker-image-{{ .Revision }}
+          paths:
+            - /home/circleci/project/cpac-docker-image.tar.gz
+      - save_cache:
+          key: cpac-singularity-image-{{ .Revision }}
+          paths:
+            - /home/circleci/project/cpac-singularity-image.simg
       - store_artifacts:
           path: cpac-docker-image.tar.gz
       - store_artifacts:
           path: cpac-singularity-image.simg
-      - persist_to_workspace:
-          root: /home/circleci/
-          paths:
-            - project/cpac-docker-image.tar.gz
-            - project/cpac-singularity-image.simg
   build-lite:
     machine:
       image: ubuntu-2004:202010-01
@@ -220,15 +223,18 @@ jobs:
       - set-python-version
       - build-images:
           variant: lite
+      - save_cache:
+          key: cpac-docker-image-lite-{{ .Revision }}
+          paths: 
+            - /home/circleci/project/cpac-docker-image-lite.tar.gz
+      - save_cache:
+          key: cpac-singularity-image-lite-{{ .Revision }}
+          paths: 
+            - /home/circleci/project/cpac-singularity-image-lite.simg
       - store_artifacts:
           path: cpac-docker-image-lite.tar.gz
       - store_artifacts:
           path: cpac-singularity-image-lite.simg
-      - persist_to_workspace:
-          root: /home/circleci/
-          paths:
-            - project/cpac-docker-image-lite.tar.gz
-            - project/cpac-singularity-image-lite.simg
   combine-coverage:
     machine:
       image: ubuntu-2004:202010-01
@@ -249,10 +255,12 @@ jobs:
       image: ubuntu-2004:202010-01
     steps:
       - checkout
-      - attach_workspace:
-          at: /home/circleci/
       - set-up-variant:
           variant: "<< parameters.variant >>"
+      - restore_cache:
+          keys: 
+            - cpac-docker-image-<< parameters.variant >>-{{ .Revision }}
+            - cpac-docker-image<< parameters.variant >>-{{ .Revision }}
       - check-for-built-images
       - set-python-version
       - get-sample-bids-data
@@ -272,10 +280,12 @@ jobs:
       image: ubuntu-2004:202010-01
     steps:
       - checkout
-      - attach_workspace:
-          at: /home/circleci/
       - set-up-variant:
           variant: "<< parameters.variant >>"
+      - restore_cache:
+          keys: 
+            - cpac-singularity-image-<< parameters.variant >>-{{ .Revision }}
+            - cpac-singularity-image<< parameters.variant >>-{{ .Revision }}
       - check-for-built-images
       - set-python-version
       - get-singularity
