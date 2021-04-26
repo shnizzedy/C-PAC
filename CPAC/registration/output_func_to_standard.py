@@ -568,19 +568,20 @@ def ants_apply_warps_func_mni(
                 name='apply_ants_warp_{0}_mapnode_{1}_{2}_{3}'.format(
                     output_name, inverse_string, registration_template,
                     num_strat),
-                iterfield=['input_image'])
+                iterfield=['input_image'],
+                mem_gb=1,
+                mem_x=(0.4, lambda **kwargs: kwargs['input_image']))
     else:
         apply_ants_warp = pe.Node(
                 interface=ants.ApplyTransforms(),
                 name='apply_ants_warp_{0}_{1}_{2}_{3}'.format(
                     output_name, inverse_string, registration_template,
-                    num_strat))
+                    num_strat),
+                mem_gb=1,
+                mem_x=(0.4, lambda **kwargs: kwargs['input_image']))
 
     apply_ants_warp.inputs.out_postfix = '_antswarp'
     apply_ants_warp.interface.num_threads = int(num_ants_cores)
-    apply_ants_warp.interface.mem_gb = 0.4 * get_img_nvols(
-        apply_ants_warp.inputs.input_image
-    ) / num_cpus + 1
 
     if inverse is True:
         workflow.connect(inverse_transform_flags, 'inverse_transform_flags', apply_ants_warp, 'invert_transform_flags')

@@ -14,6 +14,7 @@ from CPAC.longitudinal_pipeline.longitudinal_workflow import (
     func_longitudinal_template_wf
 )
 from CPAC.utils.yaml_template import upgrade_pipeline_to_1_8
+from CPAC.vmhc.utils import get_img_nvols
 
 
 # Run condor jobs
@@ -541,6 +542,12 @@ def run(subject_list_file, config_file=None, p_name=None, plugin=None,
                     sys.exit()
         '''
         # END LONGITUDINAL TEMPLATE PIPELINE
+
+        all_func_scans = sublist[0]['func']
+        global longest_series
+        longest_series = max([get_img_nvols(
+            all_func_scans[scan]['scan']
+        ) for scan in all_func_scans.keys()])
 
         # If it only allows one, run it linearly
         if c.pipeline_setup['system_config']['num_participants_at_once'] == 1:
