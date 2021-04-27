@@ -52,12 +52,14 @@ class Node(pe.Node):
     )
 
     def __init__(self, *args, mem_gb=DEFAULT_MEM_GB, **kwargs):
-        super().__init__(*args, **kwargs)
+        print(mem_gb)
+        super().__init__(*args, mem_gb=DEFAULT_MEM_GB, **kwargs)
 
     __init__.__signature__ = Signature(parameters=[
         p[1] if p[0] != 'mem_gb' else (
             'mem_gb',
-            Parameter('mem_gb', Parameter.POSITIONAL_OR_KEYWORD, default=2.0)
+            Parameter('mem_gb', Parameter.POSITIONAL_OR_KEYWORD,
+                      default=DEFAULT_MEM_GB)
         )[1] for p in signature(pe.Node).parameters.items()])
 
     __init__.__doc__ = re.sub(r'(?<!\s):', ' :', '\n'.join([
@@ -101,11 +103,18 @@ class Node(pe.Node):
         return self._mem_gb
 
 
-class MapNode(pe.MapNode):
+class MapNode(Node, pe.MapNode):
     __doc__ = _doctest_skiplines(
-        f'mem_gb={DEFAULT_MEM_GB}\n\nn_procs=1\n\n{pe.MapNode.__doc__}',
+        pe.MapNode.__doc__,
         {"    ...                           'functional3.nii']"}
     )
 
-    __init__ = partialmethod(pe.MapNode.__init__, mem_gb=DEFAULT_MEM_GB,
-                             n_procs=1)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    __init__.__signature__ = Signature(parameters=[
+        p[1] if p[0] != 'mem_gb' else (
+            'mem_gb',
+            Parameter('mem_gb', Parameter.POSITIONAL_OR_KEYWORD,
+                      default=DEFAULT_MEM_GB)
+        )[1] for p in signature(pe.Node).parameters.items()])

@@ -368,7 +368,9 @@ def create_wf_edit_func(wf_name="edit_func"):
                                          output_names=['stopidx',
                                                        'startidx'],
                                          function=get_idx),
-                           name='func_get_idx')
+                           name='func_get_idx',
+                           mem_gb=0.2,
+                           mem_x=(0.2, lambda **kwargs: kwargs['in_files']))
 
     # wire in the func_get_idx node
     preproc.connect(inputNode, 'func',
