@@ -360,9 +360,11 @@ def run_workflow(sub_dict, c, run, pipeline_timing_info=None, p_name=None,
     )
 
     if test_config:
+        import sys
         logger.info('This has been a test of the pipeline configuration '
                     'file, the pipeline was built successfully, but was '
                     'not run')
+        sys.exit(0)
     else:
         working_dir = os.path.join(
             c.pipeline_setup['working_directory']['path'], workflow.name)

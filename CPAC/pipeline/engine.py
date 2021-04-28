@@ -997,9 +997,13 @@ class ResourcePool(object):
                                 atlas_id = tag.replace('atlas-', '')
                         id_string.inputs.atlas_id = atlas_id
                     else:
-                        warnings.warn(str(
-                            LookupError("\n[!] No atlas ID found for "
-                                        f"{out_dct['filename']}.\n")))
+                        warnings.formatwarning = (
+                            lambda msg, *args, **kwargs: str(
+                                msg
+                            ) if str(msg).endswith('\n') else f'{msg}\n')
+                        warnings.warn("\n[!] No atlas ID found for "
+                                      f"{out_dct['filename']}.\n",
+                                      stacklevel=0)
 
                 nii_name = pe.Node(Rename(), name=f'nii_{resource_idx}_'
                                                   f'{pipe_x}')
