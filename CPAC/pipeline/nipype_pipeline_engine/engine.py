@@ -10,6 +10,7 @@ from nipype import logging
 from nipype.pipeline import engine as pe
 from nipype.pipeline.engine.utils import (
     _create_dot_graph,
+    format_dot,
     generate_expanded_graph,
     get_print_name,
     _replacefunk,
@@ -203,6 +204,62 @@ class Workflow(pe.Workflow):
                     )
                     logger.debug("cross connection: %s", dotlist[-1])
         return ("\n" + prefix).join(dotlist)
+
+    def write_graph(
+        self,
+        dotfilename="graph.dot",
+        graph2use="hierarchical",
+        format="png",
+        simple_form=True,
+    ):
+        graphtypes = ["orig", "flat", "hierarchical", "exec", "colored"]
+        if graph2use not in graphtypes:
+            raise ValueError(
+                "Unknown graph2use keyword. Must be one of: " + str(graphtypes)
+            )
+        base_dir, dotfilename = os.path.split(dotfilename)
+        if base_dir == "":
+            if self.base_dir:
+                base_dir = self.base_dir
+                if self.name:
+                    base_dir = os.path.join(base_dir, self.name)
+            else:
+                base_dir = os.getcwd()
+        os.makedirs(base_dir, exist_ok=True)
+        if graph2use in ["hierarchical", "colored"]:
+            if self.name[:1].isdigit():  # these graphs break if int
+                raise ValueError(
+                    "{} graph failed, workflow name cannot begin "
+                    "with a number".format(graph2use)
+                )
+            dotfilename = os.path.join(base_dir, dotfilename)
+            self.write_hierarchical_dotfile(
+                dotfilename=dotfilename,
+                colored=graph2use == "colored",
+                simple_form=simple_form,
+            )
+            outfname = format_dot(dotfilename, format=format)
+        else:
+            graph = self._graph
+            if graph2use in ["flat", "exec"]:
+                graph = self._create_flat_graph()
+            if graph2use == "exec":
+                graph = generate_expanded_graph(deepcopy(graph))
+            outfname = export_graph(
+                graph,
+                base_dir,
+                dotfilename=dotfilename,
+                format=format,
+                simple_form=simple_form,
+            )
+
+        logger.info(
+            "Generated workflow graph: %s (graph2use=%s, simple_form=%s)."
+            % (outfname, graph2use, simple_form)
+        )
+        return outfname
+
+    write_graph.__doc__ = pe.Workflow.write_graph.__doc__
 
     def write_hierarchical_dotfile(
         self, dotfilename=None, colored=False, simple_form=True
