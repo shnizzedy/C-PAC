@@ -2,6 +2,7 @@
 
 import argparse
 import datetime
+import gc
 import os
 import subprocess
 import sys
@@ -13,6 +14,7 @@ from urllib import request
 from urllib.error import HTTPError
 
 from CPAC import __version__
+from CPAC.utils.monitoring.monitoring import dump_garbage
 from CPAC.pipeline.plugins import LegacyMultiProcPlugin
 from CPAC.utils.configuration import Configuration
 from CPAC.utils.yaml_template import create_yaml_from_template, \
@@ -22,6 +24,9 @@ from CPAC.utils.utils import load_preconfig, update_nested_dict
 import yamlordereddictloader
 from warnings import simplefilter, warn
 simplefilter(action='ignore', category=FutureWarning)
+
+gc.enable()
+gc.set_debug(gc.DEBUG_LEAK)
 
 DEFAULT_TMP_DIR = "/tmp"
 DEFAULT_PIPELINE = "/cpac_resources/default_pipeline.yml"
@@ -683,5 +688,7 @@ elif args.analysis_level in ["test_config", "participant"]:
                     data_config_file
                 )
             )
+
+dump_garbage()
 
 sys.exit(0)

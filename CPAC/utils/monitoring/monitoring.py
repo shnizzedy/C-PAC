@@ -1,3 +1,4 @@
+import gc
 import glob
 import json
 import logging
@@ -8,6 +9,20 @@ import socketserver
 import threading
 
 from CPAC.pipeline import nipype_pipeline_engine as pe
+
+
+def dump_garbage():
+    """show us what's the garbage about
+    From https://code.activestate.com/recipes/65333/"""
+    # force collection
+    print("\nGARBAGE:")
+    gc.collect()
+
+    print("\nGARBAGE OBJECTS:")
+    for x in gc.garbage:
+        s = str(x)
+        s = s[:80] if len(s) > 80 else s
+        print(type(x), "\n  ", s)
 
 
 # Log initial information from all the nodes
