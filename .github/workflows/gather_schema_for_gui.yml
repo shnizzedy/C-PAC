@@ -1,0 +1,21 @@
+name: Gather schema for GUI
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  gather:
+    name: Gather schema
+    runs-on: ubuntu-latest
+    container: 
+      image: ghcr.io/${GITHUB_REPOSITORY}:nightly 
+    steps:
+      - name: Make JSON schema
+        run: |
+          git clone https://github.com/${GITHUB_REPOSITORY}_GUI.git
+          cd ${GITHUB_REPOSITORY}_GUI
+          python /code/.github/scripts/gui/gather_schema.py $PWD/c-pac/resources/pipeline/schema.json
+          cat $PWD/c-pac/resources/pipeline/schema.json
+          
