@@ -11,7 +11,7 @@ jobs:
     name: Gather schema
     runs-on: ubuntu-latest
     container: 
-      image: ghcr.io/${GITHUB_REPOSITORY,,}:nightly 
+      image: fcpindi/c-pac:nightly
     steps:
       - name: Make JSON schema
         run: |
