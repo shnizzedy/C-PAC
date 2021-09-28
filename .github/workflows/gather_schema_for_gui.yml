@@ -24,5 +24,6 @@ jobs:
           path: C-PAC_GUI
       - name: Make JSON schema
         run: |
+          mkdir -p C-PAC_GUI/c-pac/resources/pipeline
           python C-PAC/.github/scripts/gui/gather_schema.py C-PAC_GUI/c-pac/resources/pipeline/schema.json
           cat C-PAC_GUI/c-pac/resources/pipeline/schema.json
