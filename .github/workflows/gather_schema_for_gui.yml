@@ -20,7 +20,7 @@ jobs:
       - name: Checkout GUI
         uses: actions/checkout@v2
         with:
-          repository: ${GITHUB_REPOSITORY}_GUI
+          repository: FCP-INDI/C-PAC_GUI
           path: C-PAC_GUI
       - name: Make JSON schema
         run: |
