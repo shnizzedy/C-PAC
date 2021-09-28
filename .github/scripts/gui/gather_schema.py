@@ -6,7 +6,7 @@ from voluptuous.validators import ExactSequence, \
 from CPAC.pipeline.schema import schema
 
 
-def schema_to_json(schema_dict, filepath=None):
+def schema_to_json(schema_dict):
     """Function to parse a Voluptuous schema dictionary and save a
     JSON representation.
 
@@ -20,7 +20,8 @@ def schema_to_json(schema_dict, filepath=None):
 
     Returns
     -------
-    json_string : str
+    dict
+        JSON serializable dictionary
 
     Examples
     --------
@@ -62,11 +63,12 @@ def schema_to_json(schema_dict, filepath=None):
         return getattr(schema_dict, '__name__', str(schema_dict))
     if isinstance(schema_dict, Schema):
         return schema_to_json(schema_dict.schema)
-    if filepath is not None:
-        json.dump(schema_dict, open(filepath, 'w'))
-    else:
-        return json.dumps(schema_dict)
+    return schema_dict
 
 
 if __name__ == '__main__':
-    schema_to_json(schema.schema, sys.argv[1])
+    s2j = schema_to_json(schema.schema)
+    if len(sys.argv) > 1 and sys.argv[1] is not None:
+        json.dump(s2j, open(sys.argv[1], 'w'))
+    else:
+        print(json.dumps(s2j))
