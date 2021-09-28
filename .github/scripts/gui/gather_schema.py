@@ -60,7 +60,7 @@ def schema_to_json(schema_dict):
     if isinstance(schema_dict, set):
         return {'set': list(schema_dict)}
     if isinstance(schema_dict, type):
-        return getattr(schema_dict, '__name__', str(schema_dict))
+        return {'type': getattr(schema_dict, '__name__', str(schema_dict))}
     if isinstance(schema_dict, Schema):
         return schema_to_json(schema_dict.schema)
     return schema_dict
