@@ -69,6 +69,6 @@ def schema_to_json(schema_dict):
 if __name__ == '__main__':
     s2j = schema_to_json(schema.schema)
     if len(sys.argv) > 1 and sys.argv[1] is not None:
-        json.dump(s2j, open(sys.argv[1], 'w'))
+        json.dump(s2j, open(sys.argv[1], 'w'), indent=2)
     else:
         print(json.dumps(s2j))
