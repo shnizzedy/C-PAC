@@ -16,7 +16,7 @@ jobs:
       - name: Make JSON schema
         run: |
           git clone https://github.com/${GITHUB_REPOSITORY}_GUI.git
-          cd ${GITHUB_REPOSITORY}_GUI
+          cd C-PAC_GUI
           python /code/.github/scripts/gui/gather_schema.py $PWD/c-pac/resources/pipeline/schema.json
           cat $PWD/c-pac/resources/pipeline/schema.json
           
