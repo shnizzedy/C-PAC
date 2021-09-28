@@ -63,7 +63,7 @@ def schema_to_json(schema_dict, filepath=None):
     if isinstance(schema_dict, Schema):
         return schema_to_json(schema_dict.schema)
     if filepath is not None:
-        json.dump(schema_dict, filepath)
+        json.dump(schema_dict, open(filepath, 'w'))
     else:
         return json.dumps(schema_dict)
 
