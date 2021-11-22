@@ -7,8 +7,12 @@ from nipype import logging
 
 from nipype.interfaces.utility import Function
 
+from CPAC.connectome.connectivity_matrix import create_connectome_nilearn, \
+                                                get_connectome_method
 from CPAC.utils.datasource import create_roi_mask_dataflow, \
-    create_spatial_map_dataflow, resample_func_roi
+                                  create_spatial_map_dataflow, \
+                                  resample_func_roi
+from CPAC.utils.interfaces.netcorr import NetCorr, strip_afni_output_header
 
 
 def get_voxel_timeseries(wf_name='voxel_timeseries'):
@@ -773,6 +777,7 @@ def timeseries_extraction_AVG(wf, cfg, strat_pool, pipe_num, opt=None):
                  "space-template_bold"]]],
      "outputs": ["desc-Mean_timeseries",
                  "desc-ndmg_correlations",
+                 "connectome",
                  "atlas_name"]}
     '''
 
@@ -824,7 +829,51 @@ def timeseries_extraction_AVG(wf, cfg, strat_pool, pipe_num, opt=None):
     wf.connect(resample_functional_roi, 'out_func',
                roi_timeseries, 'inputspec.rest')
 
-    # create the graphs
+    # create the graphs:
+    # - connectivity matrix
+    matrix_outputs = {}
+    for cm_measure in cfg['timeseries_extraction', 'connectivity_matrix',
+                          'measure']:
+        for cm_tool in cfg['timeseries_extraction', 'connectivity_matrix',
+                           'using']:
+            implementation = get_connectome_method(cm_measure, cm_tool)
+            if implementation is NotImplemented:
+                continue
+
+            if cm_tool == 'Nilearn':
+                timeseries_correlation = create_connectome_nilearn(
+                    name=f'connectomeNilearn{cm_measure}_{pipe_num}'
+                )
+                timeseries_correlation.inputs.inputspec.method = cm_measure
+
+            elif cm_tool == "AFNI":
+                timeseries_correlation = pe.Node(
+                    NetCorr(),
+                    name=f'connectomeAFNI{cm_measure}_{pipe_num}')
+                if implementation:
+                    timeseries_correlation.inputs.part_corr = (
+                        cm_measure == 'Partial'
+                    )
+                
+                strip_header_node = pe.Node(Function(input_names=['filepath'],
+                            output_names=['filepath'],
+                            imports=['import subprocess'],
+                            function=strip_afni_output_header),
+                name=f'netcorrStripHeader{cm_measure}_{pipe_num}')
+
+                wf.connect(timeseries_correlation, 'out_file',
+                           strip_header_node, 'filepath')
+
+            wf.connect(resample_functional_roi, 'out_roi',
+                       timeseries_correlation, 'inputspec.in_rois')
+
+            wf.connect(resample_functional_roi, 'out_func',
+                       timeseries_correlation, 'inputspec.in_file')
+
+            matrix_outputs[f'{cm_measure}_{cm_tool}_connectome'] = (
+                timeseries_correlation, 'out_file')
+
+    # - NDMG
     from CPAC.utils.ndmg_utils import ndmg_create_graphs
 
     ndmg_graph_imports = ['import os',
@@ -845,7 +894,8 @@ def timeseries_extraction_AVG(wf, cfg, strat_pool, pipe_num, opt=None):
     outputs = {
         'desc-Mean_timeseries': (roi_timeseries, 'outputspec.roi_csv'),
         'desc-ndmg_correlations': (ndmg_graph, 'out_file'),
-        'atlas_name': (roi_dataflow, 'outputspec.out_name')
+        'atlas_name': (roi_dataflow, 'outputspec.out_name'),
+        **matrix_outputs
     }
 
     return (wf, outputs)

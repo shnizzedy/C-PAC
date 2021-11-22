@@ -28,7 +28,7 @@ class NetCorrInputSpec(AFNICommandInputSpec):
         argstr="-mask %s",
     )
     automask_off = Bool(
-        True,
+        False,
         desc='If you want to neither put in a mask '
              '*nor* have the automasking occur',
         argstr='-automask_off', usedefault=True
@@ -215,3 +215,10 @@ class NetCorr(AFNICommand):
                 os.path.join(corrdir, "*.nii.gz"))
 
         return outputs
+
+
+def strip_afni_output_header(filepath):
+    """Function to rewrite a file with all but the first 6 lines"""
+    subprocess.run(f'tail -n +7 {filepath} > ./tempfile', shell=True)
+    subprocess.run(f'mv ./tempfile {filepath}', shell=True)
+    return filepath
