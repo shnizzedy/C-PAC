@@ -332,6 +332,10 @@ def generate_xcp_qc(space, desc, original_anat,
     return qc_filepath
 
 
+def temporary_debug(strat_pool):
+    raise Exception(strat_pool)
+
+
 def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
     # pylint: disable=unused-argument, invalid-name
     """
@@ -364,6 +368,14 @@ def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
                                as_module=True),
                       name=f'xcpqc_{pipe_num}')
     output_key = None
+
+    debug = pe.Node(Function(input_names=['strat_pool'],
+                             output_names=[],
+                             function=temporary_debug,
+                             as_module=True),
+                    name=f'debug_{pipe_num}')
+    debug.inputs.strat_pool = strat_pool
+    wf.add_nodes([debug])
 
     try:
         nodes = {
