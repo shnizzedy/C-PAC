@@ -411,6 +411,10 @@ def run_workflow(sub_dict, c, run, pipeline_timing_info=None, p_name=None,
         subject_id, sub_dict, c, p_name, num_ants_cores
     )
 
+    for graph2use in {'orig', 'colored', 'exec'}:
+        workflow.write_graph(os.path.join(
+            log_dir, f'{graph2use}.dot'), graph2use)
+
     if test_config:
         logger.info('This has been a test of the pipeline configuration '
                     'file, the pipeline was built successfully, but was '
