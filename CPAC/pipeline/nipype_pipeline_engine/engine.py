@@ -74,7 +74,10 @@ class Node(pe.Node):
         if self.seed is not None:
             self._apply_random_seed()
             if self.seed_applied:
-                random_state_logger.info('%s', self.name)
+                random_state_logger.info('%s',
+                                         '%s  # (Atropos constant)' %
+                                         self.name if 'atropos' in
+                                         self.name else self.name)
 
         if 'mem_x' in kwargs and isinstance(
             kwargs['mem_x'], (tuple, list)
@@ -174,8 +177,10 @@ class Node(pe.Node):
             return new_flags
         if hasattr(self.inputs, 'flags'):
             self.inputs.flags = prep_flags('flags')
-        else:
+        elif hasattr(self.inputs, 'args'):
             self.inputs.args = prep_flags('args')
+        else:
+            raise Exception('\n'.join(str(self.name, str(flags))))
 
     def _apply_random_seed(self):
         '''Apply flags for the first matched interface'''
