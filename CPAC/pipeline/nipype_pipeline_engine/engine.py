@@ -190,7 +190,10 @@ class Node(pe.Node):
                     return
         for rsf, flags in random_seed_flags['interfaces'].items():
             if isinstance(self.interface, rsf):
-                self._add_flags(flags)
+                try:
+                    self._add_flags(flags)
+                except Exception as e:
+                    raise Exception(str(flags)) from e
                 self.seed_applied = True
                 return
 
