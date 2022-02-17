@@ -12,68 +12,68 @@ on:
 
 
 jobs:
-  Ubuntu:
-    name: Build C-PAC Ubuntu
-    strategy:
-      matrix:
-        Dockerfile: 
-        # - Ubuntu.bionic-non-free
-        # - Ubuntu.xenial-20200114
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out C-PAC (depth 0)
-        if: github.event.inputs.base_ref != ''
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Check out C-PAC (depth 2)
-        if: github.event.inputs.base_ref == ''
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-      - name: Get changed files
-        uses: tj-actions/changed-files@v15
-        if: github.event.inputs.base_ref != ''
-        id: changed-files-base
-        with:
-          base_sha: ${{ github.event.inputs.base_ref }}
-          files: .github/Dockerfiles/*
-      - name: Get changed files
-        uses: tj-actions/changed-files@v15
-        if: github.event.inputs.base_ref == ''
-        id: changed-files
-        with:
-          since_last_remote_commit: "true"
-          files: .github/Dockerfiles/*
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-        if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-        if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
-      - name: Set tag
-        run: |
-          TAG=$(sed 's/\./:/' <(echo ${{ matrix.Dockerfile }}))
-          echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}/$TAG" | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
-        if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v2.7.0
-        with:
-          file: .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
-          push: true
-          tags: |
-            ${{ env.DOCKER_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-        if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+  # Ubuntu:
+  #   name: Build C-PAC Ubuntu
+  #   strategy:
+  #     matrix:
+  #       Dockerfile: 
+  #       # - Ubuntu.bionic-non-free
+  #       # - Ubuntu.xenial-20200114
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out C-PAC (depth 0)
+  #       if: github.event.inputs.base_ref != ''
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
+  #     - name: Check out C-PAC (depth 2)
+  #       if: github.event.inputs.base_ref == ''
+  #       uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 2
+  #     - name: Get changed files
+  #       uses: tj-actions/changed-files@v15
+  #       if: github.event.inputs.base_ref != ''
+  #       id: changed-files-base
+  #       with:
+  #         base_sha: ${{ github.event.inputs.base_ref }}
+  #         files: .github/Dockerfiles/*
+  #     - name: Get changed files
+  #       uses: tj-actions/changed-files@v15
+  #       if: github.event.inputs.base_ref == ''
+  #       id: changed-files
+  #       with:
+  #         since_last_remote_commit: "true"
+  #         files: .github/Dockerfiles/*
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v1
+  #       if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+  #     - name: Log in to GitHub Container Registry
+  #       uses: docker/login-action@v1
+  #       with:
+  #         registry: ghcr.io
+  #         username: ${{ github.actor }}
+  #         password: ${{ secrets.GITHUB_TOKEN }}
+  #       if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+  #     - name: Set tag
+  #       run: |
+  #         TAG=$(sed 's/\./:/' <(echo ${{ matrix.Dockerfile }}))
+  #         echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}/$TAG" | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+  #       if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@v2.7.0
+  #       with:
+  #         file: .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
+  #         push: true
+  #         tags: |
+  #           ${{ env.DOCKER_TAG }}
+  #         cache-from: type=gha
+  #         cache-to: type=gha,mode=max
+  #       if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
   
   stages:
     name: Build Docker stage images
-    needs: Ubuntu
+    # needs: Ubuntu
     strategy:
       matrix:
         Dockerfile:
