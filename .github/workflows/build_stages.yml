@@ -164,7 +164,7 @@ jobs:
   #       if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
 
   trigger-next-workflow:
-    needs: stages
+    # needs: stages
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
