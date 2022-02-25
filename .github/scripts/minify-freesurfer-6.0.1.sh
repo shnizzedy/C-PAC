@@ -13,27 +13,10 @@
 #             ├── ds000239-sub-01_run-02
 #             │   └── sub-01_run-02_T1w.nii.gz  # s3://openneuro.org/ds000239/sub-01/anat/sub-01_run-02_T1w.nii.gz
 #             └── studyforrest-sub-01
-#                 ├── README.md
-#                 └── original
-#                     └── 3T_structural_mri
-#                         ├── CHANGES
-#                         ├── ISSUES
-#                         ├── LICENSE
-#                         ├── README.md
-#                         ├── datacite.yml
-#                         ├── datalad_description.json
-#                         └── sub-01
-#                             └── anat
-#                                 ├── sub-01_SWI.json
-#                                 ├── sub-01_SWI_defacemask.nii.gz
-#                                 ├── sub-01_SWImag.nii.gz
-#                                 ├── sub-01_SWIphase.nii.gz
-#                                 ├── sub-01_T1w.json
-#                                 ├── sub-01_T1w.nii.gz
-#                                 ├── sub-01_T1w_defacemask.nii.gz
-#                                 ├── sub-01_T2w.json
-#                                 ├── sub-01_T2w.nii.gz
-#                                 └── sub-01_T2w_defacemask.nii.gz
+#                 ├── sub-01_T1w.json
+#                 ├── sub-01_T1w.nii.gz
+#                 ├── sub-01_T2w.json
+#                 └── sub-01_T2w.nii.gz
 
 # Set up local env vars
 DATA_DIR=${PWD}/data/fs601
@@ -55,9 +38,9 @@ docker run --rm -dit --security-opt seccomp:unconfined \
   -v ${CPAC_DIR}/dev/docker_data/license.txt:/data/license.txt \
   -e FS_LICENSE='/data/license.txt' \
   -e FS_TIME_ALLOW=0 \
+  --entrypoint /bin/bash \
   --name fs601 \
-  ghcr.io/fcp-indi/c-pac/freesurfer:6.0.1-xenial \
-    /bin/bash
+  ghcr.io/fcp-indi/c-pac/freesurfer:6.0.1-xenial
 
 ## Trace the following commands:
 cmd1="recon-all -s studyforrest-sub-01 -all -i /data/input/studyforrest-sub-01/sub-01_T1w.nii.gz  -T2 /data/input/studyforrest-sub-01/sub-01_T2w.nii.gz -T2pial"
