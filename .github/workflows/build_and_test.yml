@@ -2,28 +2,37 @@ name: Build and test C-PAC
 
 on:
   workflow_dispatch:
+    inputs:
+      sha:
+        description: 'SHA that triggered the run'
+        required: true
+        type: string
 
 jobs:
   C-PAC:
     uses: shnizzedy/C-PAC/.github/workflows/build_C-PAC.yml@CI/GitHub-workflows # TODO: Set to FCP-INDI/**@main
     with:
       variant: ''
+      sha: ${{ github.event.inputs.sha }}
 
   C-PAC-lite:
     needs: C-PAC
     uses: shnizzedy/C-PAC/.github/workflows/build_C-PAC.yml@CI/GitHub-workflows # TODO: Set to FCP-INDI/**@main
     with:
       variant: lite
+      sha: ${{ github.event.inputs.sha }}
 
   C-PAC-ABCD-HCP:
     uses: shnizzedy/C-PAC/.github/workflows/build_C-PAC.yml@CI/GitHub-workflows # TODO: Set to FCP-INDI/**@main
     with:
       variant: ABCD-HCP
+      sha: ${{ github.event.inputs.sha }}
 
   C-PAC-fMRIPrep-LTS:
     uses: shnizzedy/C-PAC/.github/workflows/build_C-PAC.yml@CI/GitHub-workflows # TODO: Set to FCP-INDI/**@main
     with:
       variant: fMRIPrep-LTS
+      sha: ${{ github.event.inputs.sha }}
 
   Circle_tests:
     name: Run tests on CircleCI

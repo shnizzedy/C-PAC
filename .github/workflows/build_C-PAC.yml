@@ -6,12 +6,22 @@ on:
       variant:
         required: true
         type: string
+      sha:
+        required: true
+        type: string
 
 jobs:
   C-PAC:
     name: Build Docker C-PAC images
     runs-on: ubuntu-latest
     steps:
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Maximize build space
         uses: easimon/maximize-build-space@v4
         with:
@@ -83,3 +93,27 @@ jobs:
             ${{ env.DOCKER_TAG }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+      - name: Set status cancelled
+        if: ${{ cancelled() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: cancelled
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status failed
+        if: ${{ failure() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: failure
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status success
+        if: ${{ success() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: success
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}

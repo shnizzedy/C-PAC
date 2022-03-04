@@ -9,6 +9,10 @@ on:
         description: 'Base reference if triggered by a pull request'
         required: false
         default: ""
+      sha:
+        description: 'SHA on which check is being run'
+        required: true
+        type: string
 
 
 jobs:
@@ -21,6 +25,13 @@ jobs:
         - Ubuntu.xenial-20200114
     runs-on: ubuntu-latest
     steps:
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Check out C-PAC (depth 0)
         if: github.event.inputs.base_ref != ''
         uses: actions/checkout@v2
@@ -70,6 +81,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
         if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+      - name: Set status cancelled
+        if: ${{ cancelled() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: cancelled
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status failed
+        if: ${{ failure() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: failure
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status success
+        if: ${{ success() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: success
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
   
   stages:
     name: Build Docker stage images
@@ -97,6 +132,13 @@ jobs:
         - msm.2.0-bionic
     runs-on: ubuntu-latest
     steps:
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Check out C-PAC (depth 0)
         if: github.event.inputs.base_ref != ''
         uses: actions/checkout@v2
@@ -162,6 +204,30 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
         if: contains(steps.changed-files-base.outputs.all_changed_files, matrix.Dockerfile) || contains(steps.changed-files.outputs.all_changed_files, matrix.Dockerfile)
+      - name: Set status cancelled
+        if: ${{ cancelled() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: cancelled
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status failed
+        if: ${{ failure() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: failure
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status success
+        if: ${{ success() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: success
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
 
   build-base:
     needs: stages
@@ -173,75 +239,106 @@ jobs:
           - ABCD-HCP
           - fMRIPrep-LTS
     steps:
-    - name: Check out C-PAC (depth 0)
-      if: github.event.inputs.base_ref != ''
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Check out C-PAC (depth 2)
-      if: github.event.inputs.base_ref == ''
-      uses: actions/checkout@v2
-      with:
-        fetch-depth: 2
-    - name: Prep source files
-      run: sed -i -e 's/^/\.github\/Dockerfiles\//' .github/stage_requirements/${{ matrix.variant }}.txt
-    - name: Get changed files since fork point
-      uses: tj-actions/changed-files@v17.2
-      if: github.event.inputs.base_ref != ''
-      id: changed-files-base
-      with:
-        use_fork_point: "true"
-        files_from_source_file: |
-          .github/stage_requirements/${{ matrix.variant }}.txt
-    - name: Get changed files since last commit
-      uses: tj-actions/changed-files@v17.2
-      if: github.event.inputs.base_ref == ''
-      id: changed-files
-      with:
-        since_last_remote_commit: "true"
-        files_from_source_file: |
-          .github/stage_requirements/${{ matrix.variant }}.txt
-    - name: Clear up some space on runner
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-      run: |
-        sudo rm -rf /usr/share/dotnet
-        sudo rm -rf /opt/ghc
-        sudo rm -rf "/usr/local/share/boost"
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1.6.0
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-    - name: Log in to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-    - name: Set tag
-      run: |
-        TAG="stage-base:${{ matrix.variant }}-$(cat version)"
-        echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}/$TAG" | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-    - name: Prep Dockerfiles for forked repository
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-      run: |
-          .github/scripts/local_ghcr .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile ${{ github.repository_owner }}
-          cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
-    - name: See Dockerfile
-      run: cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
-    - name: Build and push base image
-      uses: docker/build-push-action@v2.9.0
-      with:
-        context: .
-        file: .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
-        push: true
-        tags: |
-          ${{ env.DOCKER_TAG }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
-      if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.variant }} dependency base image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Check out C-PAC (depth 0)
+        if: github.event.inputs.base_ref != ''
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Check out C-PAC (depth 2)
+        if: github.event.inputs.base_ref == ''
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - name: Prep source files
+        run: sed -i -e 's/^/\.github\/Dockerfiles\//' .github/stage_requirements/${{ matrix.variant }}.txt
+      - name: Get changed files since fork point
+        uses: tj-actions/changed-files@v17.2
+        if: github.event.inputs.base_ref != ''
+        id: changed-files-base
+        with:
+          use_fork_point: "true"
+          files_from_source_file: |
+            .github/stage_requirements/${{ matrix.variant }}.txt
+      - name: Get changed files since last commit
+        uses: tj-actions/changed-files@v17.2
+        if: github.event.inputs.base_ref == ''
+        id: changed-files
+        with:
+          since_last_remote_commit: "true"
+          files_from_source_file: |
+            .github/stage_requirements/${{ matrix.variant }}.txt
+      - name: Clear up some space on runner
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /opt/ghc
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Set tag
+        run: |
+          TAG="stage-base:${{ matrix.variant }}-$(cat version)"
+          echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}/$TAG" | tr '[:upper:]' '[:lower:]') >> $GITHUB_ENV
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Prep Dockerfiles for forked repository
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+        run: |
+            .github/scripts/local_ghcr .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile ${{ github.repository_owner }}
+            cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
+      - name: See Dockerfile
+        run: cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Build and push base image
+        uses: docker/build-push-action@v2.9.0
+        with:
+          context: .
+          file: .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_TAG }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+        if: steps.changed-files-base.outputs.any_changed || steps.changed-files.outputs.any_changed
+      - name: Set status cancelled
+        if: ${{ cancelled() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.variant }} dependency base image"
+          sha: ${{ github.event.inputs.sha }}
+          status: cancelled
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status failed
+        if: ${{ failure() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.variant }} dependency base image"
+          sha: ${{ github.event.inputs.sha }}
+          status: failure
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
+      - name: Set status success
+        if: ${{ success() }}
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.variant }} dependency base image"
+          sha: ${{ github.event.inputs.sha }}
+          status: success
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
 
   trigger-next-workflow:
     needs: build-base
@@ -252,6 +349,6 @@ jobs:
         with:
           fetch-depth: 2
       - name: Build and test C-PAC
-        run: echo "$ACTIONS_WORKFLOW_TOKEN" | gh auth login --with-token && gh workflow run "Build and test C-PAC" --ref ${GITHUB_REF_NAME}
+        run: echo "$ACTIONS_WORKFLOW_TOKEN" | gh auth login --with-token && gh workflow run "Build and test C-PAC" --ref ${GITHUB_REF_NAME} -f sha="${{ github.events.inuputs.sha }}"
         env:
           ACTIONS_WORKFLOW_TOKEN: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
