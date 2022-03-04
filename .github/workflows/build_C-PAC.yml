@@ -15,13 +15,6 @@ jobs:
     name: Build Docker C-PAC images
     runs-on: ubuntu-latest
     steps:
-      - name: Set status check in-progress
-        uses: shnizzedy/set-github-checks-status@v0.0
-        with:
-          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
-          sha: ${{ github.event.inputs.sha }}
-          status: in_progress
-          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Maximize build space
         uses: easimon/maximize-build-space@v4
         with:
@@ -33,6 +26,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build C-PAC ${{ github.event.inputs.variant }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
       - name: Log in to GitHub Container Registry

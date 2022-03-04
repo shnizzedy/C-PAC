@@ -25,13 +25,6 @@ jobs:
         - Ubuntu.xenial-20200114
     runs-on: ubuntu-latest
     steps:
-      - name: Set status check in-progress
-        uses: shnizzedy/set-github-checks-status@v0.0
-        with:
-          name: "Build ${{ matrix.Dockerfile }} image"
-          sha: ${{ github.event.inputs.sha }}
-          status: in_progress
-          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Check out C-PAC (depth 0)
         if: github.event.inputs.base_ref != ''
         uses: actions/checkout@v2
@@ -42,6 +35,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Get changed files since fork point
         uses: tj-actions/changed-files@v17.2
         if: github.event.inputs.base_ref != ''
@@ -132,13 +132,6 @@ jobs:
         - msm.2.0-bionic
     runs-on: ubuntu-latest
     steps:
-      - name: Set status check in-progress
-        uses: shnizzedy/set-github-checks-status@v0.0
-        with:
-          name: "Build ${{ matrix.Dockerfile }} image"
-          sha: ${{ github.event.inputs.sha }}
-          status: in_progress
-          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Check out C-PAC (depth 0)
         if: github.event.inputs.base_ref != ''
         uses: actions/checkout@v2
@@ -149,6 +142,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.Dockerfile }} image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Get changed files since fork point
         uses: tj-actions/changed-files@v17.2
         if: github.event.inputs.base_ref != ''
@@ -239,13 +239,6 @@ jobs:
           - ABCD-HCP
           - fMRIPrep-LTS
     steps:
-      - name: Set status check in-progress
-        uses: shnizzedy/set-github-checks-status@v0.0
-        with:
-          name: "Build ${{ matrix.variant }} dependency base image"
-          sha: ${{ github.event.inputs.sha }}
-          status: in_progress
-          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Check out C-PAC (depth 0)
         if: github.event.inputs.base_ref != ''
         uses: actions/checkout@v2
@@ -256,6 +249,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
+      - name: Set status check in-progress
+        uses: shnizzedy/set-github-checks-status@v0.0
+        with:
+          name: "Build ${{ matrix.variant }} dependency base image"
+          sha: ${{ github.event.inputs.sha }}
+          status: in_progress
+          token: ${{ secrets.ACTIONS_WORKFLOW_TOKEN }}
       - name: Prep source files
         run: sed -i -e 's/^/\.github\/Dockerfiles\//' .github/stage_requirements/${{ matrix.variant }}.txt
       - name: Get changed files since fork point
