@@ -1,4 +1,4 @@
-from nipype import logging
+from CPAC.nipype import logging
 logger = logging.getLogger('nipype.workflow')
 
 from CPAC.nipype.pipeline import engine as pe

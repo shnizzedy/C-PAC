@@ -1,4 +1,4 @@
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.interfaces import ants
 
 logger = logging.getLogger('nipype.workflow')

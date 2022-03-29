@@ -1,7 +1,7 @@
 from builtins import str, bytes
 import inspect
 
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.interfaces.base import (CommandLineInputSpec, CommandLine, Directory, TraitedSpec,
                     traits, isdefined, File, InputMultiObject, InputMultiPath,
                     Undefined, Str)

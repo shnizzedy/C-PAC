@@ -1,7 +1,7 @@
 from builtins import str, bytes
 import inspect
 
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.interfaces.base import (traits, DynamicTraitedSpec, Undefined,
                                     isdefined, BaseInterfaceInputSpec)
 from nipype.interfaces.io import IOBase, add_traits

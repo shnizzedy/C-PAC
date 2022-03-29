@@ -5,7 +5,7 @@ import time
 import shutil
 
 from nipype import config
-from nipype import logging
+from CPAC.nipype import logging
 from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.afni as afni
 import nipype.interfaces.fsl as fsl

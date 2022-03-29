@@ -1,7 +1,8 @@
 import os
 import six
 import warnings
-import logging
+
+from CPAC.nipype import logging
 
 logger = logging.getLogger('nipype.workflow')
 

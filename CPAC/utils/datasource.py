@@ -1,7 +1,7 @@
 import csv
 import json
 import nipype.interfaces.utility as util
-from nipype import logging
+from CPAC.nipype import logging
 # pylint: disable=ungrouped-imports, wrong-import-order
 from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.afni as afni

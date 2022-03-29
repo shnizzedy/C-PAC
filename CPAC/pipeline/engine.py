@@ -1,5 +1,4 @@
 import ast
-import logging
 import os
 import warnings
 import copy
@@ -13,6 +12,7 @@ from nipype.interfaces.utility import \
 from CPAC.image_utils.spatial_smoothing import spatial_smoothing
 from CPAC.image_utils.statistical_transforms import z_score_standardize, \
     fisher_z_score_standardize
+from CPAC.nipype import logging
 from CPAC.pipeline.check_outputs import ExpectedOutputs
 from CPAC.registration.registration import transform_derivative
 from CPAC.utils import Outputs
@@ -25,7 +25,6 @@ from CPAC.utils.datasource import (
 )
 from CPAC.utils.interfaces.function import Function
 from CPAC.utils.interfaces.datasink import DataSink
-from CPAC.utils.monitoring.custom_logging import getLogger
 from CPAC.utils.utils import read_json, create_id_string, write_output_json, \
     get_last_prov_entry, check_prov_for_regtool
 
@@ -754,7 +753,8 @@ class ResourcePool:
     def gather_pipes(self, wf, cfg, all=False, add_incl=None, add_excl=None):
         excl = []
         substring_excl = []
-        outputs_logger = getLogger(f'{cfg["subject_id"]}_expectedOutputs')
+        outputs_logger = logging.getLogger(
+            f'{cfg["subject_id"]}_expectedOutputs')
         expected_outputs = ExpectedOutputs()
 
         if add_excl:

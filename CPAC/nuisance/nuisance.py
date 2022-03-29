@@ -1238,7 +1238,7 @@ def create_regressor_workflow(nuisance_selectors,
                         cosfilter_imports = ['import os',
                                              'import numpy as np',
                                              'import nibabel as nb',
-                                             'from nipype import logging']
+                                             'from CPAC.nipype import logging']
 
                         cosfilter_node = pe.Node(
                             util.Function(input_names=['input_image_path',

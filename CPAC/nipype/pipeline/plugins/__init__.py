@@ -7,5 +7,5 @@ from .legacymultiproc import LegacyMultiProcPlugin  # noqa: F401
 # Override MultiProc
 from .multiproc import MultiProcPlugin  # noqa: F401
 
-__all__ = get_interfaces_to_not_override(plugins) + [
-    'LegacyMultiProcPlugin', 'MultiProcPlugin']
+__all__ = get_interfaces_to_not_override(plugins, [
+    'LegacyMultiProcPlugin', 'MultiProcPlugin'])

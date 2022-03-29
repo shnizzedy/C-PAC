@@ -125,7 +125,7 @@ def map_to_roi(timeseries, maps):
     """
     import numpy as np
     import pandas as pd
-    from nipype import logging
+    from CPAC.nipype import logging
     logger = logging.getLogger('nipype.workflow')
 
     testMat = pd.read_csv(timeseries)

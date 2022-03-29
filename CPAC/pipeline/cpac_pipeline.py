@@ -7,7 +7,6 @@ import pickle
 import copy
 import faulthandler
 
-from logging import getLogger
 from time import strftime
 
 import nipype
@@ -17,7 +16,7 @@ from CPAC.nipype.pipeline import engine as pe
 from CPAC.nipype.pipeline.plugins import \
     LegacyMultiProcPlugin, MultiProcPlugin
 from nipype import config
-from nipype import logging
+from CPAC.nipype import logging
 
 from indi_aws import aws_utils, fetch_creds
 
@@ -1060,7 +1059,7 @@ def connect_pipeline(wf, cfg, rpool, pipeline_blocks):
                 f"to workflow '{wf}' " + previous_nb_str + e.args[0],
             )
             if cfg.pipeline_setup['Debugging']['verbose']:
-                verbose_logger = getLogger('engine')
+                verbose_logger = logging.getLogger('engine')
                 verbose_logger.debug(e.args[0])
                 verbose_logger.debug(rpool)
             raise

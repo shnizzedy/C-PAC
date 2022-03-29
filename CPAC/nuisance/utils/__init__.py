@@ -7,7 +7,7 @@ import nipype.interfaces.fsl as fsl
 import nipype.interfaces.utility as util
 from CPAC.nipype.pipeline import engine as pe
 from nipype.interfaces import afni
-from nipype import logging
+from CPAC.nipype import logging
 
 from CPAC.nuisance.utils.compcor import calc_compcor_components
 from CPAC.nuisance.utils.crc import encode as crc_encode

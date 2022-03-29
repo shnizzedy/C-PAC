@@ -965,7 +965,7 @@ def add_afni_prefix(tpattern):
     return tpattern
 
 
-def get_interfaces_to_not_override(orig_module):
+def get_interfaces_to_not_override(orig_module, overrides=None):
     """Function to gather all the interfaces that should not be
     overridden by customization.
 
@@ -974,13 +974,19 @@ def get_interfaces_to_not_override(orig_module):
     orig_module : module
         The original module that is being customized.
 
+    overrides : list of str or set of str or None
+        The list of names interfaces that are being overridden.
+
     Returns
     -------
     list
-        The list of interfaces that should not be overridden.
+        List of interfaces.
     """
-    return [interface[0] for interface in
-            inspect.getmembers(orig_module, inspect.isclass)]
+    _all = set(orig_module.__all__ if hasattr(orig_module, '__all__') else [
+        item for item in dir(orig_module) if not item.startswith('_')])
+    if overrides is not None:
+        _all.update(set(overrides))
+    return _all
 
 
 def write_to_log(workflow, log_dir, index, inputs, scan_id):
@@ -993,7 +999,7 @@ def write_to_log(workflow, log_dir, index, inputs, scan_id):
     import datetime
 
     from CPAC import __version__
-    from nipype import logging
+    from CPAC.nipype import logging
 
     iflogger = logging.getLogger('nipype.interface')
 

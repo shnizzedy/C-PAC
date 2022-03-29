@@ -5,9 +5,9 @@ from logging import Logger
 
 import yaml
 
+from CPAC.nipype import logging
 from CPAC.utils.datasource import bidsier_prefix
-from CPAC.utils.monitoring.custom_logging import getLogger, MockLogger, \
-                                                 set_up_logger
+from CPAC.utils.monitoring.custom_logging import MockLogger, set_up_logger
 
 
 def check_outputs(output_dir, log_dir, pipe_name, unique_id):
@@ -29,7 +29,7 @@ def check_outputs(output_dir, log_dir, pipe_name, unique_id):
     -------
     message :str
     """
-    outputs_logger = getLogger(f'{unique_id}_expectedOutputs')
+    outputs_logger = logging.getLogger(f'{unique_id}_expectedOutputs')
     missing_outputs = ExpectedOutputs()
     container = os.path.join(f'cpac_{pipe_name}', unique_id)
     if (

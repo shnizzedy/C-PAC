@@ -3,7 +3,7 @@ import scipy.signal as signal
 import nibabel as nb
 import numpy as np
 from CPAC.utils import safe_shape
-from nipype import logging
+from CPAC.nipype import logging
 from scipy.linalg import svd
 
 iflogger = logging.getLogger('nipype.interface')

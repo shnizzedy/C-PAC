@@ -6,7 +6,7 @@ from warnings import warn
 import numpy as np
 from nilearn.connectome import ConnectivityMeasure
 from nilearn.input_data import NiftiLabelsMasker
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.interfaces import utility as util
 from CPAC.nipype.pipeline import engine as pe
 from CPAC.utils.interfaces.function import Function

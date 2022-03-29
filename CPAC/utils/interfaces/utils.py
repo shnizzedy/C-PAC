@@ -25,7 +25,7 @@ import nilearn.image as nli
 from collections import OrderedDict
 
 import scipy.ndimage as nd
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.utils.filemanip import fname_presuffix
 from nipype.interfaces.io import add_traits
 from nipype.interfaces.base import (

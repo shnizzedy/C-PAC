@@ -10,7 +10,7 @@ from CPAC.utils import get_interfaces_to_not_override
 # import our DEFAULT_MEM_GB and override Node, MapNode
 from .engine import DEFAULT_MEM_GB, Node, MapNode, UNDEFINED_SIZE, Workflow
 
-__all__ = get_interfaces_to_not_override(pe) + [
-    'DEFAULT_MEM_GB', 'Node', 'MapNode', 'UNDEFINED_SIZE', 'Workflow']
+__all__ = get_interfaces_to_not_override(pe, [
+    'DEFAULT_MEM_GB', 'Node', 'MapNode', 'UNDEFINED_SIZE', 'Workflow'])
 
 del pe

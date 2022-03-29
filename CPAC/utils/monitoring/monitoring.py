@@ -1,6 +1,5 @@
 import glob
 import json
-import logging
 import os
 import math
 import networkx as nx
@@ -9,6 +8,7 @@ import threading
 
 from traits.trait_base import Undefined
 
+from CPAC.nipype import logging
 from CPAC.nipype.pipeline import engine as pe
 
 

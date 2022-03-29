@@ -267,8 +267,8 @@ def generate_gantt_chart(
 
     Usage
     -----
-    # import logging
-    # import logging.handlers
+    # from CPAC.nipype import logging
+    # from CPAC.nipype import logging.handlers
     # from nipype.utils.profiler import log_nodes_cb
 
     # log_filename = 'callback.log'

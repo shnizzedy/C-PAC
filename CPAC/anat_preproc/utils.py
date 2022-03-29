@@ -424,7 +424,7 @@ def fslmaths_command(in_file, number, out_file_suffix):
 """This module provides interfaces for workbench -volume-remove-islands commands"""
 from nipype.interfaces.base import TraitedSpec, File, traits, CommandLineInputSpec
 from nipype.interfaces.workbench.base import WBCommand
-from nipype import logging
+from CPAC.nipype import logging
 
 iflogger = logging.getLogger("nipype.interface")
 

@@ -2,9 +2,11 @@ import sys
 import os
 import glob
 import string
-import logging
 import yaml
 import yamlordereddictloader
+
+from CPAC.nipype import logging
+
 
 def extract_data(c, param_map):
     """

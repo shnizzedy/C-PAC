@@ -12,7 +12,6 @@ Nipype translation of ANTs workflows
 
 # general purpose
 from collections import OrderedDict
-from logging import getLogger
 from pkg_resources import resource_filename as pkgr_fn
 from packaging.version import parse as parseversion, Version
 
@@ -441,7 +440,8 @@ def init_atropos_wf(name='atropos_wf',
         name='01_atropos', n_procs=omp_nthreads, mem_gb=mem_gb)
 
     if not use_random_seed:
-        getLogger('random').info('%s  # (Atropos constant)', atropos.name)
+        logging.getLogger('random').info(
+            '%s  # (Atropos constant)', atropos.name)
 
     # massage outputs
     pad_segm = pe.Node(ImageMath(operation='PadImage', op2='%d' % padding),

@@ -5,24 +5,6 @@ import os
 from CPAC.utils.docs import docstring_parameter
 from CPAC.utils.monitoring.config import MOCK_LOGGERS
 
-
-def getLogger(name):  # pylint: disable=invalid-name
-    """Function to get a mock logger if one exists, falling back on
-    real loggers.
-
-    Parameters
-    ----------
-    name : str
-
-    Returns
-    -------
-    logger : CPAC.utils.monitoring.custom_logging.MockLogger or logging.Logger
-    """
-    if name in MOCK_LOGGERS:
-        return MOCK_LOGGERS[name]
-    return logging.getLogger(name)
-
-
 # pylint: disable=too-few-public-methods
 class MockHandler:
     '''Handler for MockLogger.'''
@@ -104,6 +86,7 @@ def set_up_logger(name, filename=None, level=None, log_dir=None, mock=False):
 
     Examples
     --------
+    >>> from CPAC.nipype import logging
     >>> lg = set_up_logger('test')
     >>> lg.handlers[0].baseFilename.split('/')[-1]
     'test.log'
@@ -115,7 +98,7 @@ def set_up_logger(name, filename=None, level=None, log_dir=None, mock=False):
     >>> lg.level
     10
     >>> lg = set_up_logger('third_test', mock=True)
-    >>> getLogger('third_test') == lg
+    >>> logging.getLogger('third_test') == lg
     True
     >>> 'third_test' in MOCK_LOGGERS
     True

@@ -571,7 +571,7 @@ def setup_test_logger(logger_name, log_file, level, to_screen=False):
     '''
 
     # Import packages
-    import logging
+    from CPAC.nipype import logging
 
     # Init logger, formatter, filehandler, streamhandler
     logger = logging.getLogger(logger_name)

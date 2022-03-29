@@ -43,6 +43,4 @@ from .utils import (
     repickle,
 )
 
-__all__ = [
-    'function', 'get_interfaces_to_not_override'
-]
+__all__ = ['function', 'get_interfaces_to_not_override']

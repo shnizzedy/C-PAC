@@ -7,10 +7,9 @@ for Nipype's documentation.
 import os
 import re
 import warnings
-from logging import getLogger
 from inspect import Parameter, Signature, signature
 from nibabel import load
-from nipype import logging
+from CPAC.nipype import logging
 from nipype.interfaces.utility import Function
 from nipype.pipeline import engine as pe
 from nipype.pipeline.engine.utils import load_resultfile as _load_resultfile
@@ -23,7 +22,7 @@ from traits.trait_handlers import TraitListObject
 DEFAULT_MEM_GB = 2.0
 UNDEFINED_SIZE = (42, 42, 42, 1200)
 
-random_state_logger = getLogger('random')
+random_state_logger = logging.getLogger('random')
 
 
 def _doctest_skiplines(docstring, lines_to_skip):
