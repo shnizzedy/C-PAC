@@ -33,7 +33,21 @@ class MockHandler:
 # pylint: disable=too-few-public-methods
 class MockLogger:
     '''Mock logging.Logger to provide the same API without keeping the
-    logger in memory.'''
+    logger in memory.
+
+    Parameters
+    ----------
+    name : str
+        name for the MockLogger
+
+    filename : str
+        filename for log file
+
+    level : int
+
+    log_dir : str
+        path in which to save the log file
+    '''
     def __init__(self, name, filename, level, log_dir):
         self.name = name
         self.level = level

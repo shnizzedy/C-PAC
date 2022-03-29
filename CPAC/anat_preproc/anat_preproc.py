@@ -6,7 +6,7 @@ from nipype.interfaces import fsl
 from nipype.interfaces import freesurfer
 import nipype.interfaces.utility as util
 from nipype.interfaces.fsl import utils as fsl_utils
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.anat_preproc.ants import init_brain_extraction_wf
 from CPAC.anat_preproc.utils import create_3dskullstrip_arg_string, \
     freesurfer_hemispheres, \

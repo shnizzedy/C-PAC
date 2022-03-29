@@ -39,9 +39,10 @@ from .utils import (
     check_command_path,
     check_system_deps,
     check_config_resources,
+    get_interfaces_to_not_override,
     repickle,
 )
 
 __all__ = [
-    'function'
+    'function', 'get_interfaces_to_not_override'
 ]

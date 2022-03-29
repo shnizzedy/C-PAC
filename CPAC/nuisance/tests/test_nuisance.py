@@ -2,7 +2,7 @@ import glob
 import pytest
 import yaml
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 
 from CPAC.nuisance import create_nuisance_regression_workflow

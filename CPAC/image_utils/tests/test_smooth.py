@@ -1,7 +1,7 @@
 import os
 import pytest
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 
 from CPAC.utils.test_mocks import configuration_strategy_mock

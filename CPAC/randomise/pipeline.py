@@ -1,4 +1,4 @@
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 from nipype.interfaces.base import BaseInterface, BaseInterfaceInputSpec, traits, File, TraitedSpec
 from nipype.interfaces import fsl

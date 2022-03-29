@@ -494,7 +494,7 @@ def build_feat_model(model_df, model_name, group_config_file, resource_id,
     import pandas as pd
     import numpy as np
 
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
     import nipype.interfaces.io as nio
     from CPAC.pipeline.cpac_group_runner import load_config_yml

@@ -59,7 +59,7 @@ import numpy as np
 import pandas as pd
 from CPAC.generate_motion_statistics.generate_motion_statistics import \
     motion_power_statistics
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.utils.interfaces.function import Function
 from CPAC.utils.utils import check_prov_for_motion_tool
 

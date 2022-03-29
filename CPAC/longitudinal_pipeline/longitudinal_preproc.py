@@ -3,7 +3,7 @@ import os
 import six
 import numpy as np
 import nibabel as nib
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.fsl as fsl
 from nipype.interfaces.fsl import ConvertXFM

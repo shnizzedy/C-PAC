@@ -1,7 +1,7 @@
 from nipype import logging
 logger = logging.getLogger('nipype.workflow')
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 
 import nipype.interfaces.afni as afni
 

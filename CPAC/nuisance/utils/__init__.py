@@ -5,7 +5,7 @@ from collections import OrderedDict
 import nipype.interfaces.ants as ants
 import nipype.interfaces.fsl as fsl
 import nipype.interfaces.utility as util
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from nipype.interfaces import afni
 from nipype import logging
 

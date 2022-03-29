@@ -4,7 +4,7 @@ from nibabel.testing import data_path
 from nipype import Function
 from nipype.interfaces.utility import IdentityInterface
 from traits.trait_base import Undefined
-from CPAC.pipeline.nipype_pipeline_engine import (
+from CPAC.nipype.pipeline.engine import (
     DEFAULT_MEM_GB, Node, MapNode, Workflow)
 
 

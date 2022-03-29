@@ -2,6 +2,7 @@ import os
 import collections.abc
 import fnmatch
 import gzip
+import inspect
 import numbers
 import pickle
 import threading
@@ -127,7 +128,7 @@ def get_flag(in_flag):
 
 
 def get_flag_wf(wf_name='get_flag'):
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
 
     wf = pe.Workflow(name=wf_name)
@@ -253,7 +254,7 @@ def get_zscore(map_node=False, wf_name='z_score'):
     >>> wf.run()  # doctest: +SKIP
     """  # noqa: E501  # pylint: disable=line-too-long
     # pylint: disable=import-outside-toplevel,redefined-outer-name,reimported
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
     import nipype.interfaces.fsl as fsl
 
@@ -328,7 +329,7 @@ def get_fisher_zscore(input_name, map_node=False, wf_name='fisher_z_score'):
     Runs the compute_fisher_z_score function as part of a one-node workflow.
     """
 
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
     import nipype.interfaces.fsl as fsl
 
@@ -964,6 +965,24 @@ def add_afni_prefix(tpattern):
     return tpattern
 
 
+def get_interfaces_to_not_override(orig_module):
+    """Function to gather all the interfaces that should not be
+    overridden by customization.
+
+    Parameters
+    ----------
+    orig_module : module
+        The original module that is being customized.
+
+    Returns
+    -------
+    list
+        The list of interfaces that should not be overridden.
+    """
+    return [interface[0] for interface in
+            inspect.getmembers(orig_module, inspect.isclass)]
+
+
 def write_to_log(workflow, log_dir, index, inputs, scan_id):
     """
     Method to write into log file the status of the workflow run.
@@ -1079,7 +1098,7 @@ def create_log(wf_name="log", scan_id=None):
     Workflow to create log
     """
 
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
     import CPAC.utils.interfaces.function as function
 

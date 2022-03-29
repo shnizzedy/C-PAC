@@ -5,7 +5,7 @@ from nipype.interfaces.utility import Function
 from CPAC.connectome.connectivity_matrix import create_connectome_afni, \
                                                 create_connectome_nilearn, \
                                                 get_connectome_method
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.utils.datasource import create_roi_mask_dataflow, \
                                   create_spatial_map_dataflow, \
                                   resample_func_roi

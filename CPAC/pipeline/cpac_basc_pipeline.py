@@ -4,8 +4,8 @@ import sys
 import glob
 import nipype.interfaces.utility as util
 import nipype.interfaces.io as nio
-from CPAC.pipeline import nipype_pipeline_engine as pe
-from CPAC.pipeline.nipype_pipeline_engine.plugins import MultiProcPlugin
+from CPAC.nipype.pipeline import engine as pe
+from CPAC.nipype.pipeline.plugins import MultiProcPlugin
 from CPAC.utils import Configuration
 
 

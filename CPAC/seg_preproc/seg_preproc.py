@@ -2,7 +2,7 @@ from nipype.interfaces.utility import Function
 from nipype.interfaces import ants, freesurfer, fsl, utility as util
 
 from CPAC.anat_preproc.utils import freesurfer_hemispheres, mri_convert
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.registration.registration import apply_transform
 from CPAC.registration.utils import (
     check_transforms,

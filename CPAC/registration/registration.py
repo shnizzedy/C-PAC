@@ -1,4 +1,4 @@
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.afni as afni
 import nipype.interfaces.fsl as fsl

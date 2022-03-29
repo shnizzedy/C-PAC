@@ -2,7 +2,7 @@ import re
 import os
 import numpy as np
 import nibabel as nb
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 import CPAC
 

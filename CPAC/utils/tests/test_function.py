@@ -1,4 +1,4 @@
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.utils.interfaces.function import Function
 from CPAC.utils.datasource import get_rest
 

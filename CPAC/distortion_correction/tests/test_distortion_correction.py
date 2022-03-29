@@ -4,8 +4,8 @@ import os
 import pytest
 
 import nipype.interfaces.io as nio
-from CPAC.pipeline import nipype_pipeline_engine as pe
-from CPAC.pipeline.nipype_pipeline_engine.plugins import MultiProcPlugin
+from CPAC.nipype.pipeline import engine as pe
+from CPAC.nipype.pipeline.plugins import MultiProcPlugin
 from CPAC.utils.test_resources import setup_test_wf
 # from CPAC.func_preproc.func_preproc import create_func_preproc
 # from CPAC.distortion_correction.distortion_correction import blip_distcor_wf

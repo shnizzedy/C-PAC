@@ -1,7 +1,7 @@
 """Tests for cpac_pipeline.py"""
 import pytest
 from CPAC.pipeline.cpac_pipeline import run_workflow
-from CPAC.pipeline.nipype_pipeline_engine.plugins import MultiProcPlugin
+from CPAC.nipype.pipeline.plugins import MultiProcPlugin
 from CPAC.utils.configuration import Configuration
 
 

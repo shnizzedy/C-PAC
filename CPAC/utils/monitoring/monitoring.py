@@ -9,7 +9,7 @@ import threading
 
 from traits.trait_base import Undefined
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 
 
 # Log initial information from all the nodes

@@ -8,7 +8,7 @@ from nilearn.connectome import ConnectivityMeasure
 from nilearn.input_data import NiftiLabelsMasker
 from nipype import logging
 from nipype.interfaces import utility as util
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 from CPAC.utils.interfaces.function import Function
 from CPAC.utils.interfaces.netcorr import NetCorr, strip_afni_output_header
 

@@ -13,8 +13,8 @@ from time import strftime
 import nipype
 import yaml
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
-from CPAC.pipeline.nipype_pipeline_engine.plugins import \
+from CPAC.nipype.pipeline import engine as pe
+from CPAC.nipype.pipeline.plugins import \
     LegacyMultiProcPlugin, MultiProcPlugin
 from nipype import config
 from nipype import logging

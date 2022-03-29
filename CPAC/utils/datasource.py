@@ -3,7 +3,7 @@ import json
 import nipype.interfaces.utility as util
 from nipype import logging
 # pylint: disable=ungrouped-imports, wrong-import-order
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.afni as afni
 
 from CPAC.utils import function
@@ -154,7 +154,7 @@ def create_func_datasource(rest_dict, wf_name='func_datasource'):
 
     Scan input (from inputnode) is an iterable.
     """
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
 
     wf = pe.Workflow(name=wf_name)
@@ -250,7 +250,7 @@ def create_fmap_datasource(fmap_dct, wf_name='fmap_datasource'):
     described in the data configuration (sublist) YAML file.
     """
 
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
 
     wf = pe.Workflow(name=wf_name)
@@ -556,7 +556,7 @@ def ingress_func_metadata(wf, cfg, rpool, sub_dict, subject_id,
 
 
 def create_general_datasource(wf_name):
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
 
     wf = pe.Workflow(name=wf_name)
@@ -818,7 +818,7 @@ def gather_extraction_maps(c):
 
 def resolve_resolution(resolution, template, template_name, tag=None):
     import nipype.interfaces.afni as afni
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     from CPAC.utils.datasource import check_for_s3
 
     tagname = None
@@ -871,7 +871,7 @@ def resolve_resolution(resolution, template, template_name, tag=None):
 
 
 def create_anat_datasource(wf_name='anat_datasource'):
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
 
     wf = pe.Workflow(name=wf_name)
@@ -1066,7 +1066,7 @@ def create_spatial_map_dataflow(spatial_maps, wf_name='datasource_maps'):
 
 
 def create_grp_analysis_dataflow(wf_name='gp_dataflow'):
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     import nipype.interfaces.utility as util
     from CPAC.utils.datasource import select_model_files
 

@@ -5,8 +5,8 @@ import warnings
 import copy
 import yaml
 
-from CPAC.pipeline import \
-    nipype_pipeline_engine as pe  # pylint: disable=ungrouped-imports
+from CPAC.nipype.pipeline import \
+    engine as pe  # pylint: disable=ungrouped-imports
 from nipype.interfaces.utility import \
     Rename  # pylint: disable=wrong-import-order
 
@@ -1918,7 +1918,7 @@ def initiate_rpool(wf, cfg, data_paths=None, part_id=None):
 
 def run_node_blocks(blocks, data_paths, cfg=None):
     import os
-    from CPAC.pipeline import nipype_pipeline_engine as pe
+    from CPAC.nipype.pipeline import engine as pe
     from CPAC.utils.strategy import NodeBlock
 
     if not cfg:

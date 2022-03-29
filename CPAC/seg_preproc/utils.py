@@ -1,6 +1,6 @@
 # Import packages
 import os
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import scipy.ndimage as nd
 import numpy as np
 import nibabel as nb

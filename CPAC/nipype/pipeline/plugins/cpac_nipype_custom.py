@@ -14,7 +14,7 @@ from textwrap import indent
 from traceback import format_exception
 from nipype.pipeline.plugins.multiproc import logger
 from numpy import flatnonzero
-from CPAC.pipeline.nipype_pipeline_engine import MapNode, UNDEFINED_SIZE
+from CPAC.nipype.pipeline.engine import MapNode, UNDEFINED_SIZE
 from CPAC.utils.monitoring import log_nodes_cb
 
 
@@ -127,6 +127,9 @@ class CpacNipypeCustomPluginMixin():
                         node.override_mem_gb(max(
                             self.runtime[partial_match] for
                             partial_match in partial_matches))
+                    else:
+                        print('\n'.join([
+                            '!!!', str(ValueError(str(node_id)))]))
             try:
                 node_memory_estimate = node.mem_gb
             except FileNotFoundError:

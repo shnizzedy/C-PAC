@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import nipype.interfaces.utility as util
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 
 
 def fsl_aff_to_rigid(in_xfm, out_name):

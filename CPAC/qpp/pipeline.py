@@ -4,7 +4,7 @@ import os
 import nibabel as nb
 import numpy as np
 
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 import nipype.interfaces.utility as util
 import nipype.interfaces.fsl as fsl
 from CPAC.utils.interfaces.fsl import Merge as fslMerge

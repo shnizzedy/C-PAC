@@ -1,5 +1,5 @@
 import pytest
-from CPAC.pipeline.nipype_pipeline_engine.plugins import MultiProcPlugin
+from CPAC.nipype.pipeline.plugins import MultiProcPlugin
 
 
 @pytest.mark.skip(reason='requires RegressionTester')

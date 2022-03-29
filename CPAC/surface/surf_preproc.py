@@ -1,7 +1,7 @@
 import os
 import nipype.interfaces.utility as util
 from CPAC.utils.interfaces.function import Function
-from CPAC.pipeline import nipype_pipeline_engine as pe
+from CPAC.nipype.pipeline import engine as pe
 
 
 def run_surface(post_freesurfer_folder,
