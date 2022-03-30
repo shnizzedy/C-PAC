@@ -6,7 +6,7 @@ for Nipype's documentation.'''  # noqa: E501
 from nipype.pipeline import engine as pe
 # import everything in nipype.pipeline.engine.__all__
 from nipype.pipeline.engine import *  # noqa: F401,F403
-from CPAC.utils import get_interfaces_to_not_override
+from CPAC.utils.utils import get_interfaces_to_not_override
 # import our DEFAULT_MEM_GB and override Node, MapNode
 from .engine import DEFAULT_MEM_GB, Node, MapNode, UNDEFINED_SIZE, Workflow
 

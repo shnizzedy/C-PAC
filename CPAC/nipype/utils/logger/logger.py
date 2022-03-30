@@ -9,7 +9,7 @@ class Logging(NipypeLogging):
     """Class to override nipype.utils.logger.Logging"""
     def __init__(self, config):
         __doc__ = getattr(NipypeLogging.__init__, '__doc__', '')
-        super().__init__(config)
+        NipypeLogging.__init__(self, config)
         self._callback = logging.getLogger('callback')
         self._verbose_engine = logging.getLogger('engine')
         self._random_seed = logging.getLogger('random')
@@ -19,7 +19,7 @@ class Logging(NipypeLogging):
             'random': self._random_seed,
         })
 
-    __doc__ = getattr(super(), '__doc__', '')
+    __doc__ = getattr(NipypeLogging, '__doc__', '')
 
     def getLogger(self, name):
         """Method to get a Nipype logger if one exists, falling back on
@@ -40,6 +40,10 @@ class Logging(NipypeLogging):
                 'The "filemanip" logger has been deprecated and replaced by '
                 'the "utils" logger as of nipype 1.0'
             )
+        print(name)
+        print(self.loggers.get(name))
+        print(MOCK_LOGGERS.get(name))
+        print(logging.getLogger(name))
         if name in self.loggers:
             return self.loggers[name]
         elif name in MOCK_LOGGERS:
