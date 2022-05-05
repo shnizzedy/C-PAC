@@ -143,6 +143,7 @@ REQUIREMENTS        = [
     "INDI-Tools",
     "lockfile==0.12.2",
     "matplotlib==3.1.3",
+    "memray",
     "networkx==2.4",
     "nibabel==2.3.3",
     "nilearn==0.4.1",
