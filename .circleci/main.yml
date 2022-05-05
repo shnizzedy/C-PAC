@@ -185,18 +185,18 @@ commands:
           name: "Setting Python Version"
           command: |
             cd /opt/circleci/.pyenv/plugins/python-build/../.. && git pull && cd -
-            pyenv install -v 3.7.9
-            pyenv global 3.7.9
-      # - restore_cache:
-      #     keys:
-      #       - pip-ci-requirements-{{ checksum "dev/circleci_data/requirements.txt" }}-3.7.9-1
+            pyenv install -v 3.7.13
+            pyenv global 3.7.13
+      - restore_cache:
+          keys:
+            - pip-ci-requirements-{{ checksum "dev/circleci_data/requirements.txt" }}-3.7.13
       - run:
           name: "Installing CI dependencies"
           command: pip install -r dev/circleci_data/requirements.txt
-      # - save_cache:
-          # key: pip-ci-requirements-{{ checksum "dev/circleci_data/requirements.txt" }}-3.7.9-1
-          # paths: 
-          #   - /opt/circleci/.pyenv/versions/3.7.9
+      - save_cache:
+          key: pip-ci-requirements-{{ checksum "dev/circleci_data/requirements.txt" }}-3.7.13
+          paths:
+            - /opt/circleci/.pyenv/versions/3.7.13
   set-up-variant:
     parameters:
       variant:
@@ -405,7 +405,7 @@ jobs:
           path: test-results
       - save_cache:
           key: coverage-docker-<< parameters.variant >>-{{ .Revision }}
-          paths: 
+          paths:
             - .coverage.docker
             - .coverage.docker-<< parameters.variant >>
   pytest-singularity:
