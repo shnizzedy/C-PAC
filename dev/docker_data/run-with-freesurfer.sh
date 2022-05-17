@@ -1,5 +1,4 @@
 #!/bin/bash
 
 source $FREESURFER_HOME/SetUpFreeSurfer.sh
-memray run --native --follow-fork /code/run.py "$@"
-mv memray*.bin $2/log/
+python3 -m memray run -o $2/log/memray-output.bin --native --follow-fork /code/run.py "$@"
