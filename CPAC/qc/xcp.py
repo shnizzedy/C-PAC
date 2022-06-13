@@ -72,7 +72,7 @@ motion_params = ['dvars', 'framewise-displacement-jenkinson',
                  'movement-parameters']
 
 
-def _connect_motion(wf, cfg, strat_pool, qc_file, brain_mask_key, pipe_num):
+def _connect_motion(wf, nodes, strat_pool, qc_file, brain_mask_key, pipe_num):
     """
     Connect the motion metrics to the workflow.
 
@@ -81,7 +81,8 @@ def _connect_motion(wf, cfg, strat_pool, qc_file, brain_mask_key, pipe_num):
     wf : nipype.pipeline.engine.Workflow
         The workflow to connect the motion metrics to.
 
-    cfg : CPAC.utils.configuration.Configuration
+    nodes : dict
+        Dictionary of nodes already collected from the strategy pool.
 
     strat_pool : CPAC.pipeline.engine.ResourcePool
         The current strategy pool.
@@ -100,11 +101,11 @@ def _connect_motion(wf, cfg, strat_pool, qc_file, brain_mask_key, pipe_num):
     """
     # pylint: disable=invalid-name, too-many-arguments
     try:
-        nodes = {'censor-indices': strat_pool.node_data('censor-indices')}
+        nodes = {**nodes,
+                 'censor-indices': strat_pool.node_data('censor-indices')}
         wf.connect(nodes['censor-indices'].node, nodes['censor-indices'].out,
                    qc_file, 'censor_indices')
     except LookupError:
-        nodes = {}
         qc_file.inputs.censor_indices = []
     cal_DVARS = pe.Node(ImageTo1D(method='dvars'),
                         name=f'cal_DVARS_{pipe_num}',
@@ -120,7 +121,7 @@ def _connect_motion(wf, cfg, strat_pool, qc_file, brain_mask_key, pipe_num):
         **nodes,
         **{node_data: strat_pool.node_data(node_data) for node_data in [
             'subject', 'scan', brain_mask_key, 'max-displacement',
-            'space-bold_desc-brain_mask', *motion_params]}}
+            *motion_params]}}
     wf.connect([
         (nodes['space-template_desc-preproc_bold'].node, cal_DVARS, [
             (nodes['space-template_desc-preproc_bold'].out, 'in_file')]),
@@ -381,16 +382,12 @@ def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
         ]) in regressor_strat:
             opt = regressor_dct
             break
-    qc_file.inputs.regressors = strat_pool
-    func = {}
-    func['original'] = strat_pool.node_data('bold')
-    func['final'] = strat_pool.node_data('space-template_desc-preproc_bold')
-    bold_to_T1w_mask = pe.Node(interface=fsl.ImageMaths(),
+    qc_file.inputs.regressors = strat_pool    bold_to_T1w_mask = pe.Node(interface=fsl.ImageMaths(),
                                name=f'binarize_bold_to_T1w_mask_{pipe_num}',
                                op_string='-bin ')
     nodes = {key: strat_pool.node_data(key) for key in [
-        'space-bold_desc-brain_mask', 'space-T1w_desc-brain_mask',
-        'space-T1w_desc-mean_bold']}
+        'bold', 'space-bold_desc-brain_mask', 'space-T1w_desc-brain_mask',
+        'space-T1w_desc-mean_bold', 'space-template_desc-preproc_bold']}
     nodes['bold2template_mask'] = strat_pool.node_data([
         'space-template_desc-bold_mask', 'space-EPItemplate_desc-bold_mask'])
     nodes['template_mask'] = strat_pool.node_data(
@@ -401,12 +398,11 @@ def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
         afni.Resample(), name=f'resample_bold_mask_to_anat_res_{pipe_num}',
         mem_gb=0, mem_x=(0.0115, 'in_file', 't'))
     resample_bold_mask_to_template.inputs.outputtype = 'NIFTI_GZ'
-    wf = _connect_motion(wf, cfg, strat_pool, qc_file,
+    wf = _connect_motion(wf, nodes, strat_pool, qc_file,
                          brain_mask_key='space-bold_desc-brain_mask',
                          pipe_num=pipe_num)
     wf.connect([
-        (func['original'].node, bids_info, [
-            (func['original'].out, 'resource')]),
+        (nodes['bold'].node, bids_info, [(nodes['bold'].out, 'resource')]),
         (nodes['space-T1w_desc-mean_bold'].node, bold_to_T1w_mask, [
             (nodes['space-T1w_desc-mean_bold'].out, 'in_file')]),
         (nodes['space-T1w_desc-brain_mask'].node, qc_file, [
@@ -414,9 +410,9 @@ def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
         (bold_to_T1w_mask, qc_file, [('out_file', 'bold2t1w_mask')]),
         (nodes['template_mask'].node, qc_file, [
             (nodes['template_mask'].out, 'template_mask')]),
-        (func['original'].node, qc_file, [
-            (func['original'].out, 'original_func')]),
-        (func['final'].node, qc_file, [(func['final'].out, 'final_func')]),
+        (nodes['bold'].node, qc_file, [(nodes['bold'].out, 'original_func')]),
+        (nodes['space-template_desc-preproc_bold'].node, qc_file, [
+            (nodes['space-template_desc-preproc_bold'].out, 'final_func')]),
         (nodes['template'].node, qc_file, [
             (nodes['template'].out, 'template')]),
         (nodes['template_mask'].node, resample_bold_mask_to_template, [
