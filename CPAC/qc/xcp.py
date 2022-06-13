@@ -385,8 +385,7 @@ def qc_xcp(wf, cfg, strat_pool, pipe_num, opt=None):
         ]) in regressor_strat:
             opt = regressor_dct
             break
-    qc_file.inputs.regressors = opt.get('Name'
-                                        ) if isinstance(opt, dict) else ''
+    qc_file.inputs.regressors = strat_pool
     func = {}
     func['original'] = strat_pool.node_data('bold')
     func['final'] = strat_pool.node_data('space-template_desc-preproc_bold')
