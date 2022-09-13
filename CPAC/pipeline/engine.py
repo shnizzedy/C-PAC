@@ -252,7 +252,7 @@ class ResourcePool:
                    "and you still get this message, please let us know " \
                    "through any of our support channels at: " \
                    "https://fcp-indi.github.io/\n"
-        
+
         if isinstance(resource, list):
             # if a list of potential inputs are given, pick the first one
             # found

@@ -483,30 +483,33 @@ def ingress_func_metadata(wf, cfg, rpool, sub_dict, subject_id,
                               'dwell_asym_ratio'],
                 function=calc_deltaTE_and_asym_ratio),
                 name='diff_distcor_calc_delta')
-                
-            node, out_file = rpool.get('diffphase-dwell')[
-                "['diffphase-dwell:fmap_dwell_ingress']"]['data']  # <--- there will only be one pipe_idx
-            wf.connect(node, out_file, calc_delta_ratio, 'dwell_time')
 
-            node, out_file = rpool.get(f'{fmap_TE_list[0]}')[
-                f"['{fmap_TE_list[0]}:fmap_TE_ingress']"]['data']
-            wf.connect(node, out_file, calc_delta_ratio, 'echo_time_one')
+            try:
+                node, out_file = rpool.get('diffphase-dwell')[
+                    "['diffphase-dwell:fmap_dwell_ingress']"]['data']  # <--- there will only be one pipe_idx
+                wf.connect(node, out_file, calc_delta_ratio, 'dwell_time')
 
-            node, out_file = rpool.get(f'{fmap_TE_list[1]}')[
-                f"['{fmap_TE_list[1]}:fmap_TE_ingress']"]['data']
-            wf.connect(node, out_file, calc_delta_ratio, 'echo_time_two')
+                node, out_file = rpool.get(f'{fmap_TE_list[0]}')[
+                    f"['{fmap_TE_list[0]}:fmap_TE_ingress']"]['data']
+                wf.connect(node, out_file, calc_delta_ratio, 'echo_time_one')
 
-            if len(fmap_TE_list) > 2:
-                node, out_file = rpool.get(f'{fmap_TE_list[2]}')[
-                    f"['{fmap_TE_list[2]}:fmap_TE_ingress']"]['data']
-                wf.connect(node, out_file,
-                           calc_delta_ratio, 'echo_time_three')
+                node, out_file = rpool.get(f'{fmap_TE_list[1]}')[
+                    f"['{fmap_TE_list[1]}:fmap_TE_ingress']"]['data']
+                wf.connect(node, out_file, calc_delta_ratio, 'echo_time_two')
 
-            rpool.set_data('deltaTE', calc_delta_ratio, 'deltaTE', {}, "",
-                           "deltaTE_ingress")
-            rpool.set_data('dwell-asym-ratio',
-                           calc_delta_ratio, 'dwell_asym_ratio', {}, "",
-                           "dwell_asym_ratio_ingress")
+                if len(fmap_TE_list) > 2:
+                    node, out_file = rpool.get(f'{fmap_TE_list[2]}')[
+                        f"['{fmap_TE_list[2]}:fmap_TE_ingress']"]['data']
+                    wf.connect(node, out_file,
+                               calc_delta_ratio, 'echo_time_three')
+
+                rpool.set_data('deltaTE', calc_delta_ratio, 'deltaTE', {}, '',
+                               'deltaTE_ingress')
+                rpool.set_data('dwell-asym-ratio', calc_delta_ratio,
+                               'dwell_asym_ratio', {}, '',
+                               'dwell_asym_ratio_ingress')
+            except LookupError as lookup_error:
+                logger.warning(lookup_error)
 
     # Add in nodes to get parameters from configuration file
     # a node which checks if scan_parameters are present for each scan
