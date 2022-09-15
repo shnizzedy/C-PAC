@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Added the ability to ingress TotalReadoutTime from epi field map meta-data from the JSON sidecars.
+- Added the ability to use TotalReadoutTime of epi field maps in the calculation of FSL topup distortion correction.
 - Difference method (``-``) for ``CPAC.utils.configuration.Configuration`` instances
 
 ### Changed
@@ -26,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Removed ability to run single-step-resampling on motion-corrected BOLD data
 - Moved default pipeline config into directory with other preconfigs
 - Added crash messages from during and before graph building to logs
+
+### Fixed
+- Fixed an issue that was causing some epi field maps to not be ingressed if the BIDS tags were not in the correct order.
 
 ## [v1.8.4] - 2022-06-27
 
