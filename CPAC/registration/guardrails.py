@@ -120,13 +120,47 @@ def registration_guardrail_node(name=None):
                          function=registration_guardrail), name=name)
 
 
+def registration_guardrail_subworkflow(subwf: 'Workflow', reference: tuple,
+                                       registered: tuple, retry: bool = True
+                                       ) -> 'Workflow':
+    """A workflow to handle retrying a subworkflow hitting a
+    registration guardrail
+
+    Parameters
+    ----------
+    subwf : Workflow
+
+    reference : 2-tuple
+        (Node, str) -> connectors for path to reference image
+
+    registered : 2-tuple
+        (Node, str) -> connectors for path to registered image
+
+    retry : bool
+        retry (once) on failed registration?
+    """
+    name = f'{subwf.name}_guardrail'
+    wf = Workflow(name=f'{name}_wf')
+    outputspec = deepcopy(subwf.outputs)
+    guardrail = registration_guardrail_node(name)
+    outkey = registered[1]
+    wf.connect([
+        (reference[0], guardrail, [(reference[1], 'reference')]),
+        (registered[0], guardrail, [(registered[1], 'registered')])])
+    if retry:
+        wf = retry_registration_subworkflow(guardrail.outputs.registered,
+                                            subwf)
+    else:
+        wf.connect(guardrail, 'registered', outputspec, outkey)
+        wf = connect_from_spec(wf, outputspec, subwf, outkey)
+    return wf
+
+
 def registration_guardrail_workflow(registration_node, retry=True):
     """A workflow to handle hitting a registration guardrail
 
     Parameters
     ----------
-    name : str
-
     registration_node : Node
 
     retry : bool, optional
@@ -212,6 +246,37 @@ def retry_registration_node(registered, registration_node):
                 retry_node.seed = 1
         return retry_node
     return registration_node
+
+
+def retry_registration_subworkflow(registered, registration_subworkflow):
+    """Retry registration if previous attempt failed
+
+    Parameters
+    ----------
+    registered : str
+
+    registration_subworkflow : Workflow
+
+    Returns
+    -------
+    Workflow
+    """
+    from CPAC.pipeline.random_state.seed import MAX_SEED, random_seed
+    seed = random_seed()
+    if registered.endswith('-failed'):
+        retry_wf = registration_subworkflow.clone(
+            name=f'{registration_subworkflow.name}-retry')
+        if isinstance(seed, int):
+            if seed < MAX_SEED:  # increment random seed
+                seed = seed + 1
+            else:  # loop back to minumum seed
+                seed = 1
+            # pylint: disable=protected-access
+            for node in retry_wf._get_all_nodes():
+                if hasattr(node, 'seed'):
+                    node.seed = seed
+        return retry_wf
+    return registration_subworkflow
 
 
 def spec_key(interface, guardrail_key):

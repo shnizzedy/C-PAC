@@ -24,7 +24,8 @@ from nipype.interfaces.afni import utils as afni_utils
 
 from CPAC.anat_preproc.lesion_preproc import create_lesion_preproc
 from CPAC.func_preproc.utils import chunk_ts, split_ts_chunks
-from CPAC.registration.guardrails import registration_guardrail_node
+from CPAC.registration.guardrails import registration_guardrail_node, \
+                                         registration_guardrail_subworkflow
 from CPAC.registration.utils import seperate_warps_list, \
                                     check_transforms, \
                                     generate_inverse_transform_flags, \
@@ -35,6 +36,7 @@ from CPAC.registration.utils import seperate_warps_list, \
                                     one_d_to_mat, \
                                     run_c3d, \
                                     run_c4d
+from CPAC.utils.docs import docstring_parameter
 from CPAC.utils.interfaces.fsl import Merge as fslMerge
 from CPAC.utils.utils import check_prov_for_motion_tool, check_prov_for_regtool
 
@@ -3624,8 +3626,8 @@ def warp_timeseries_to_T1template_dcan_nhp(wf, cfg, strat_pool, pipe_num, opt=No
     return (wf, outputs)
 
 
-def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
-                                                  pipe_num, opt=None):
+
+def _single_step_resample_timeseries_to_T1template(cfg, strat_pool, pipe_num):
     """
     Apply motion correction, coreg, anat-to-template transforms on
     slice-time corrected functional timeseries based on fMRIPrep
@@ -3664,46 +3666,25 @@ def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
 
     Ref: https://github.com/nipreps/fmriprep/blob/84a6005b/fmriprep/workflows/bold/resampling.py#L159-L419
 
-    Node Block:
-    {"name": "single_step_resample_stc_timeseries_to_T1template",
-     "config": ["registration_workflows", "functional_registration",
-                "func_registration_to_template"],
-     "switch": ["run"],
-     "option_key": ["apply_transform", "using"],
-     "option_val": "single_step_resampling_from_stc",
-     "inputs": [(["desc-reginput_bold", "desc-mean_bold"],
-                 "desc-stc_bold",
-                 "motion-basefile",
-                 "space-bold_desc-brain_mask",
-                 "coordinate-transformation",
-                 "from-T1w_to-template_mode-image_xfm",
-                 "from-bold_to-T1w_mode-image_desc-linear_xfm",
-                 "from-bold_to-template_mode-image_xfm",
-                 "T1w",
-                 "desc-brain_T1w",
-                 "T1w-brain-template-funcreg")],
-     "outputs": ["space-template_desc-preproc_bold",
-                 "space-template_desc-brain_bold",
-                 "space-template_desc-bold_mask"]}
+    Modifications copyright (C) 2021-2022  C-PAC Developers  LGPL-3.0-or-later
     """  # noqa: 501
+    wf = pe.Workflow(f'single-step-resample_{pipe_num}')
     bbr2itk = pe.Node(util.Function(input_names=['reference_file',
                                                  'source_file',
                                                  'transform_file'],
                                     output_names=['itk_transform'],
                                     function=run_c3d),
                       name=f'convert_bbr2itk_{pipe_num}')
-    guardrail_preproc = registration_guardrail_node(
-        'single-step-resampling-preproc_guardrail')
     if cfg.registration_workflows['functional_registration'][
             'coregistration']['boundary_based_registration'][
             'reference'] == 'whole-head':
-        node, out = strat_pool.get_data('T1w')
+        bbr_reference = strat_pool.node_data('T1w')
     elif cfg.registration_workflows['functional_registration'][
             'coregistration']['boundary_based_registration'][
             'reference'] == 'brain':
-        node, out = strat_pool.get_data('desc-brain_T1w')
-    wf.connect(node, out, bbr2itk, 'reference_file')
-    wf.connect(node, out, guardrail_preproc, 'reference')
+        bbr_reference = strat_pool.node_data('desc-brain_T1w')
+    wf.connect(bbr_reference.node, bbr_reference.out,
+               bbr2itk, 'reference_file')
 
     node, out = strat_pool.get_data(['desc-reginput_bold', 'desc-mean_bold'])
     wf.connect(node, out, bbr2itk, 'source_file')
@@ -3769,15 +3750,12 @@ def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
 
     applyxfm_func_to_standard.inputs.float = True
     applyxfm_func_to_standard.inputs.interpolation = 'LanczosWindowedSinc'
-    guardrail_brain = registration_guardrail_node(
-        'single-step-resampling-brain_guardrail')
 
     wf.connect(split_func, 'out_files',
                applyxfm_func_to_standard, 'input_image')
 
     node, out = strat_pool.get_data('T1w-brain-template-funcreg')
     wf.connect(node, out, applyxfm_func_to_standard, 'reference_image')
-    wf.connect(node, out, guardrail_brain, 'reference')
     wf.connect(collectxfm, 'out', applyxfm_func_to_standard, 'transforms')
 
     ### Loop ends! ###
@@ -3818,13 +3796,56 @@ def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
                apply_mask, 'in_file')
     wf.connect(applyxfm_func_mask_to_standard, 'output_image',
                apply_mask, 'mask_file')
-    wf.connect(merge_func_to_standard, 'merged_file',
-               guardrail_preproc, 'registered')
-    wf.connect(apply_mask, 'out_file', guardrail_brain, 'registered')
+
+    return(wf, merge_func_to_standard, bbr_reference, apply_mask,
+           applyxfm_func_mask_to_standard)
+
+
+@docstring_parameter(
+    private_docstring=_single_step_resample_timeseries_to_T1template.__doc__)
+def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
+                                                  pipe_num, opt=None):
+    """
+    {private_docstring}
+
+    Node Block:
+    {"name": "single_step_resample_stc_timeseries_to_T1template",
+     "config": ["registration_workflows", "functional_registration",
+                "func_registration_to_template"],
+     "switch": ["run"],
+     "option_key": ["apply_transform", "using"],
+     "option_val": "single_step_resampling_from_stc",
+     "inputs": [(["desc-reginput_bold", "desc-mean_bold"],
+                 "desc-stc_bold",
+                 "motion-basefile",
+                 "space-bold_desc-brain_mask",
+                 "coordinate-transformation",
+                 "from-T1w_to-template_mode-image_xfm",
+                 "from-bold_to-T1w_mode-image_desc-linear_xfm",
+                 "from-bold_to-template_mode-image_xfm",
+                 "T1w",
+                 "desc-brain_T1w",
+                 "T1w-brain-template-funcreg")],
+     "outputs": ["space-template_desc-preproc_bold",
+                 "space-template_desc-brain_bold",
+                 "space-template_desc-bold_mask"]}
+    """
+    subwf, preproc, bbr_reference, brain, applyxfm_func_mask_to_standard = (
+        _single_step_resample_timeseries_to_T1template(cfg, strat_pool,
+                                                       pipe_num))
+
+    guardrail_preproc = registration_guardrail_subworkflow(
+        subwf=subwf, reference=(bbr_reference.node, bbr_reference.out),
+        registered=(preproc, 'merged_file'))
+    guardrail_brain = registration_guardrail_subworkflow(
+        subwf=subwf, reference=(bbr_reference.node, bbr_reference.out),
+        registered=(brain, 'out_file'))
 
     outputs = {
-        'space-template_desc-preproc_bold': (guardrail_preproc, 'registered'),
-        'space-template_desc-brain_bold': (guardrail_brain, 'registered'),
+        'space-template_desc-preproc_bold': (
+            guardrail_preproc, f'{preproc.name}.merged_file'),
+        'space-template_desc-brain_bold': (
+            guardrail_brain, f'{brain.name}.out_file'),
         'space-template_desc-bold_mask': (applyxfm_func_mask_to_standard,
                                           'output_image'),
     }
