@@ -441,7 +441,8 @@ def init_atropos_wf(name='atropos_wf',
         name='01_atropos', n_procs=omp_nthreads, mem_gb=mem_gb)
 
     if not use_random_seed:
-        getLogger('random').info('%s  # (Atropos constant)', atropos.name)
+        getLogger('random').info('%s\t%s',
+                                 '# (Atropos constant)', atropos.name)
 
     # massage outputs
     pad_segm = pe.Node(ImageMath(operation='PadImage', op2='%d' % padding),
