@@ -143,17 +143,20 @@ def registration_guardrail_subworkflow(subwf: 'Workflow', reference: tuple,
     wf = Workflow(name=f'{name}_wf')
     outputspec = deepcopy(subwf.outputs)
     guardrail = registration_guardrail_node(name)
-    outkey = registered[1]
     wf.connect([
         (reference[0], guardrail, [(reference[1], 'reference')]),
         (registered[0], guardrail, [(registered[1], 'registered')])])
     if retry:
-        wf = retry_registration_subworkflow(guardrail.outputs.registered,
-                                            subwf)
+        subwf_node = Node(Function(function=retry_registration_subworkflow,
+                                   inputs=['registration_subworkflow',
+                                           'registered'],
+                                   outputs=['subwf']), name=f'{name}_subwf')
+        subwf_node.inputs.registration_subworkflow = subwf
+        wf.connect(guardrail, 'registered', subwf_node, 'registered')
     else:
-        wf.connect(guardrail, 'registered', outputspec, outkey)
-        wf = connect_from_spec(wf, outputspec, subwf, outkey)
-    return wf
+        wf.connect(guardrail, 'registered', outputspec, registered[1])
+        subwf = connect_from_spec(wf, outputspec, subwf, registered[1])
+    return subwf
 
 
 def registration_guardrail_workflow(registration_node, retry=True):
@@ -248,14 +251,15 @@ def retry_registration_node(registered, registration_node):
     return registration_node
 
 
-def retry_registration_subworkflow(registered, registration_subworkflow):
+def retry_registration_subworkflow(registration_subworkflow, registered):
     """Retry registration if previous attempt failed
 
     Parameters
     ----------
-    registered : str
-
     registration_subworkflow : Workflow
+
+    registered : 2-tuple
+        (Node, str)
 
     Returns
     -------

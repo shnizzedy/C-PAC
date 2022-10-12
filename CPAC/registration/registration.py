@@ -3802,12 +3802,8 @@ def _single_step_resample_timeseries_to_T1template(cfg, strat_pool, pipe_num):
 
 
 @docstring_parameter(
-    private_docstring=_single_step_resample_timeseries_to_T1template.__doc__)
-def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
-                                                  pipe_num, opt=None):
-    """
-    {private_docstring}
-
+    private_docstring=_single_step_resample_timeseries_to_T1template.__doc__,
+    node_block="""
     Node Block:
     {"name": "single_step_resample_stc_timeseries_to_T1template",
      "config": ["registration_workflows", "functional_registration",
@@ -3828,8 +3824,10 @@ def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
                  "T1w-brain-template-funcreg")],
      "outputs": ["space-template_desc-preproc_bold",
                  "space-template_desc-brain_bold",
-                 "space-template_desc-bold_mask"]}
-    """
+                 "space-template_desc-bold_mask"]}""")
+def single_step_resample_timeseries_to_T1template(wf, cfg, strat_pool,
+                                                  pipe_num, opt=None):
+    """{private_docstring}{node_block}"""
     subwf, preproc, bbr_reference, brain, applyxfm_func_mask_to_standard = (
         _single_step_resample_timeseries_to_T1template(cfg, strat_pool,
                                                        pipe_num))
