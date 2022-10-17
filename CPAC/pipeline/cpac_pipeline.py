@@ -1401,6 +1401,12 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
         raise lookup_error
 
     # Write out the data
+    import pickle
+    oot = cfg['pipeline_setup']['output_directory']['path']
+    if not os.path.exists(oot):
+        os.makedirs(oot)
+    with open(os.path.join(oot, 'workflow.🥒'), 'wb') as _f:
+        pickle.dump(wf, _f)
     # TODO enforce value with schema validation
     try:
         encrypt_data = bool(cfg.pipeline_setup['Amazon-AWS']['s3_encryption'])
