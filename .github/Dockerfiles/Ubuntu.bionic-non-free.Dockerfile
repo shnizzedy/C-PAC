@@ -88,15 +88,6 @@ RUN groupadd -r c-pac && \
       xvfb \
       zlib1g-dev && \
     export XDG_CONFIG_HOME=/usr/bin && \
-    curl https://raw.githubusercontent.com/nvm-sh/nvm/v0.35.2/install.sh | bash && \
-    export NVM_DIR=/usr/bin/nvm && \
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" && \
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion" && \
-    nvm install 12.12.0 && \
-    nvm use 12.12.0 && \
-    nvm alias default 12.12.0 && \
-    npm install --global npm@^7 && \
-    npm install -g bids-validator && \
     curl -sLo /tmp/libpng12.deb http://mirrors.kernel.org/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb && \
     dpkg -i /tmp/libpng12.deb && \
     rm /tmp/libpng12.deb && \
