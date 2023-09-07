@@ -1139,13 +1139,12 @@ class ResourcePool:
                 nii_name.inputs.keep_ext = True
                 wf.connect(id_string, 'out_filename',
                            nii_name, 'format_string')
-                
                 node, out = self.rpool[resource][pipe_idx]['data']
                 try:
                     wf.connect(node, out, nii_name, 'in_file')
                 except OSError as os_error:
-                    logger.warning(os_error)
-                    continue
+                    raise RuntimeError(f'Could not connect {node} to '
+                                       f'{nii_name}') from os_error
 
                 write_json_imports = ['import os', 'import json']
                 write_json = pe.Node(Function(input_names=['json_data',
@@ -1441,8 +1440,9 @@ class NodeBlock:
                             wf, outs = block_function(wf, cfg, strat_pool,
                                                       pipe_x, opt)
                         except IOError as e:  # duplicate node
-                            logger.warning(e)
-                            continue
+                            raise ValueError(f'\n[!] Duplicate node name '
+                                                f'"{node_name}" in {name} '
+                                                f'with option "{opt}"\n') from e
 
                         if not outs:
                             if (block_function.__name__ == 'freesurfer_'
@@ -1861,11 +1861,16 @@ def ingress_output_dir(wf, cfg, rpool, unique_id, data_paths, part_id, ses_id, c
 
             # Rename bold mask for CPAC naming convention
             # and to avoid collision with anat brain mask
-            if data_label.endswith('desc-brain_mask') and filepath in outdir_func: 
+            if data_label.endswith('desc-brain_mask') and filepath in outdir_func:
                 data_label = data_label.replace('brain_mask', 'bold_mask')
 
+            try:
+                pipe_x = rpool.get_pipe_number(pipe_idx)
+            except ValueError:
+                pipe_x = len(rpool.pipe_list)
             if filepath in outdir_anat:
-                ingress = create_general_datasource(f'gather_outdir_{str(data_label)}')
+                ingress = create_general_datasource(
+                    f'gather_outdir_{str(data_label)}_{pipe_x}')
                 ingress.inputs.inputnode.set(
                     unique_id=unique_id,
                     data=filepath,
@@ -1875,8 +1880,8 @@ def ingress_output_dir(wf, cfg, rpool, unique_id, data_paths, part_id, ses_id, c
                 rpool.set_data(data_label, ingress, 'outputspec.data', json_info,
                     pipe_idx, node_name, f"outdir_{data_label}_ingress", inject=True)
             else:
-                if data_label.endswith('desc-preproc_bold'): 
-                    func_key = data_label
+                if data_label.endswith('desc-preproc_bold'):
+                    func_key = f'{data_label}_{pipe_x}'
                     func_dict[bidstag] = {}
                     func_dict[bidstag]['scan'] = str(filepath)
                     func_dict[bidstag]['scan_parameters'] = json_info
