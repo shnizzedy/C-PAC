@@ -31,7 +31,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set tag & Dockerfile
+      - name: Set Dockerfile
         if: github.ref_type == 'branch'
         run: |
           if [[ "${{ inputs.variant }}" == "" ]]
@@ -52,15 +52,12 @@ jobs:
           GITHUB_BRANCH=$(echo ${GITHUB_REF} | cut -d '/' -f 3-)
           if [[ ! $GITHUB_BRANCH == 'main' ]] && [[ ! $GITHUB_BRANCH == 'develop' ]]
           then
-            TAG=${GITHUB_BRANCH//\//_}
             DOCKERFILE=.github/Dockerfiles/C-PAC.develop$VARIANT-$OS.Dockerfile
           elif [[ $GITHUB_BRANCH == 'develop' ]]
           then
-            TAG=nightly
             DOCKERFILE=.github/Dockerfiles/C-PAC.develop$VARIANT-$OS.Dockerfile
           elif [[ $GITHUB_BRANCH == 'main' ]]
           then
-            TAG=latest
             if [[ $VARIANT == "" ]]
             then
               DOCKERFILE=Dockerfile
@@ -68,11 +65,9 @@ jobs:
               DOCKERFILE=variant$VARIANT.Dockerfile
             fi
           fi
-          TAG=$TAG$VARIANT
-          echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           echo DOCKERFILE="${DOCKERFILE}" >> $GITHUB_ENV
           cat $GITHUB_ENV
-      - name: Set tag & Dockerfile
+      - name: Set Dockerfile
         if: github.ref_type == 'tag'
         run: |
           if [[ "${{ inputs.variant }}" != "" ]]
@@ -85,26 +80,36 @@ jobs:
           else
             DOCKERFILE=variant$VARIANT.Dockerfile
           fi
-          TAG=release-${{ github.ref_name }}$VARIANT
-          echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           echo DOCKERFILE="${DOCKERFILE}" >> $GITHUB_ENV
           cat $GITHUB_ENV
       - name: Prep Dockerfiles for forked repository
         if: ${{ github.repository_owner }} != 'FCP-INDI'
-        run: .github/scripts/local_ghcr $DOCKERFILE ${{ github.repository_owner }} $DOCKER_TAG
+        run: .github/scripts/local_ghcr $DOCKERFILE ${{ github.repository_owner }} $DOCKER_TAG ${{ github.sha }}
       - name: See Dockerfile
         run: |
           echo $DOCKERFILE
           cat $DOCKERFILE
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v4.0.0
+      - name: Docker Metadata action
+        id: meta
+        uses: docker/metadata-action@v5.0.0
         with:
+          flavor:
+            suffix=-${{ github.sha }}
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch,priority=800
+            type=ref,event=pr,priority=799
+            type=raw,value=latest,enable={{is_default_branch}},priorty=700
+            type=sha,priority=600,onlatest=false
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5.0.0
+        with:
+          cache-from: type=gha
+          cache-to: type=gha,mode=max,compression=zstd
           context: .
           file: ${{ env.DOCKERFILE }}
+          labels: ${{ steps.meta.outputs.labels }}
           provenance: false
-          sbom: false
           push: true
-          tags: |
-            ${{ env.DOCKER_TAG }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          sbom: false
+          tags: ${{ steps.meta.outputs.tags }}

@@ -8,9 +8,9 @@ def replace_primary_repo(yaml_string, local_owner):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) != 4:
-        raise SyntaxError('Usage: local_ghcr $FILE $OWNER $DOCKER_TAG')
-    file, owner, tag = sys.argv[1:]
+    if len(sys.argv) != 5:
+        raise SyntaxError('Usage: local_ghcr $FILE $OWNER $DOCKER_TAG $SHA')
+    file, owner, tag, sha = sys.argv[1:]
     dockerfiles = '.github/Dockerfiles'
     new_Dockerfile = replace_primary_repo(
         open(file, 'r').read(),
@@ -21,4 +21,5 @@ if __name__ == '__main__':
         if tag != 'latest-lite':
             new_Dockerfile = new_Dockerfile.replace(':latest-bionic',
                                                     f':{tag}')
+        new_Dockerfile = new_Dockerfile.replace(f':{tag}', f':{tag}-{sha}')
     open(file, 'w').write(new_Dockerfile)
