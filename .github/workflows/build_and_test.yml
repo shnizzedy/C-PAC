@@ -88,8 +88,6 @@ jobs:
     strategy:
       matrix:
         Dockerfile: ${{ fromJSON(inputs.phase_two) }}
-    env:
-      REBUILD: ${{ inputs.rebuild_phase_two }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
