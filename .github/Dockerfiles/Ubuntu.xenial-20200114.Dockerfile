@@ -37,7 +37,7 @@ RUN export XDG_CONFIG_HOME=/usr/bin && \
      nvm use 12.12.0 && \
      nvm alias default 12.12.0 && \
      npm install --global npm@^7 && \
-     npm install -g bids-validator
+     npm install -g bids-validator@1.6.2
 
 ENV PATH=/usr/bin/nvm/versions/node/v12.12.0/bin:$PATH
 
