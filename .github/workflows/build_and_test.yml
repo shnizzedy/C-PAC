@@ -96,7 +96,7 @@ jobs:
           fetch-depth: 0
       - name: Prep Dockerfiles for forked repository
         run: |
-            .github/scripts/local_ghcr .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile ${{ github.repository_owner }} $DOCKER_TAG ${{ github.sha }}
+            .github/scripts/local_ghcr .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile ${{ github.repository_owner }} ${{ github.sha }}
             cat .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
       - name: See Dockerfile
         run: cat .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
@@ -166,7 +166,7 @@ jobs:
             echo '.github/stage_requirements/${{ matrix.variant }}.txt' >> .github/stage_requirements/${{ matrix.variant }}.txt
       - name: Prep Dockerfiles for forked repository
         run: |
-            .github/scripts/local_ghcr .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile ${{ github.repository_owner }} $DOCKER_TAG ${{ github.sha }}
+            .github/scripts/local_ghcr .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile ${{ github.repository_owner }} ${{ github.sha }}
             cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
       - name: See Dockerfile
         run: cat .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
@@ -235,7 +235,7 @@ jobs:
             echo '.github/stage_requirements/standard.txt' >> .github/stage_requirements/standard.txt
       - name: Prep Dockerfiles for forked repository
         run: |
-            .github/scripts/local_ghcr .github/Dockerfiles/base-standard.Dockerfile ${{ github.repository_owner }} $DOCKER_TAG ${{ github.sha }}
+            .github/scripts/local_ghcr .github/Dockerfiles/base-standard.Dockerfile ${{ github.repository_owner }} ${{ github.sha }}
             cat .github/Dockerfiles/base-standard.Dockerfile
       - name: See Dockerfile
         run: cat .github/Dockerfiles/base-standard.Dockerfile
