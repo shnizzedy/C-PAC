@@ -151,8 +151,7 @@ from CPAC.func_preproc.func_preproc import (
     bold_mask_ccs,
     bold_masking,
     func_mean,
-    func_normalize,
-    func_mask_normalize
+    func_normalize
 )
 
 from CPAC.distortion_correction.distortion_correction import (
@@ -175,7 +174,8 @@ from CPAC.nuisance.nuisance import (
     erode_mask_boldCSF,
     erode_mask_boldGM,
     erode_mask_boldWM,
-    nuisance_regression_template
+    nuisance_regression_template,
+    ingress_regressors
 )
 
 from CPAC.surface.surf_preproc import surface_postproc
@@ -572,7 +572,8 @@ Please, make yourself aware of how it works and its assumptions:
 
             try:
                 # Actually run the pipeline now, for the current subject
-                workflow_result = workflow.run(plugin=plugin, plugin_args=plugin_args)
+                workflow_result = workflow.run(plugin=plugin,
+                                               plugin_args=plugin_args)
             except UnicodeDecodeError:
                 raise EnvironmentError(
                     "C-PAC migrated from Python 2 to Python 3 in v1.6.2 (see "
@@ -790,7 +791,8 @@ CPAC run error:
                 if workflow_result is not None:
                     workflow_meta.stage = "post"
                     save_workflow_json(
-                        filename=os.path.join(log_dir, workflow_meta.filename()),
+                        filename=os.path.join(log_dir,
+                                              workflow_meta.filename()),
                         workflow=workflow_result,
                         meta=workflow_meta,
                         custom_serializer=cpac_flowdump_serializer
@@ -866,7 +868,8 @@ def build_anat_preproc_stack(rpool, cfg, pipeline_blocks=None):
         pipeline_blocks = []
 
     # T1w Anatomical Preprocessing
-    if not rpool.check_rpool('desc-reorient_T1w'):
+    if not rpool.check_rpool('desc-reorient_T1w') and \
+        not rpool.check_rpool('desc-preproc_T1w'):
         anat_init_blocks = [
             anatomical_init
         ]
@@ -1113,14 +1116,13 @@ def connect_pipeline(wf, cfg, rpool, pipeline_blocks):
                 LOGTAIL['warnings'].append(WARNING_FREESURFER_OFF_WITH_DATA)
                 continue
             previous_nb_str = (
-                f"after node block '{previous_nb.get_name()}': "
+                f"after node block '{previous_nb.get_name()}':"
             ) if previous_nb else 'at beginning:'
             # Alert user to block that raises error
             e.args = (
                 'When trying to connect node block '
                 f"'{NodeBlock(block).get_name()}' "
-                f"to workflow '{wf}' " + previous_nb_str + e.args[0],
-            )
+                f"to workflow '{wf}' {previous_nb_str} {e.args[0]}",)
             if cfg.pipeline_setup['Debugging']['verbose']:
                 verbose_logger = getLogger('engine')
                 verbose_logger.debug(e.args[0])
@@ -1223,7 +1225,7 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
             func_prep_blocks += distcor_blocks
 
         func_motion_blocks = []
-        if not rpool.check_rpool('movement-parameters'):
+        if not rpool.check_rpool('desc-movementParameters_motion'):
             if cfg['functional_preproc']['motion_estimates_and_correction'][
                 'motion_estimates']['calculate_motion_first']:
                 func_motion_blocks = [
@@ -1302,9 +1304,12 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
                           erode_mask_boldCSF,
                           erode_mask_boldGM,
                           erode_mask_boldWM]
-        nuisance += nuisance_masks + choose_nuisance_blocks(cfg, generate_only)
+        nuisance += nuisance_masks + choose_nuisance_blocks(cfg, rpool, \
+                                    generate_only)
 
         pipeline_blocks += nuisance
+
+    pipeline_blocks.append(ingress_regressors)
 
     apply_func_warp = {}
     _r_w_f_r = cfg.registration_workflows['functional_registration']
@@ -1391,8 +1396,9 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
         'nuisance_corrections', '2-nuisance_regression', 'space'
     ] and not generate_only
     if nuisance_template:
-        pipeline_blocks += [(nuisance_regression_template,
-                            ("desc-preproc_bold", "desc-stc_bold"))]
+        pipeline_blocks += [nuisance_regression_template]
+        # pipeline_blocks += [(nuisance_regression_template,
+        #                     ("desc-preproc_bold", "desc-stc_bold"))]
 
     # PostFreeSurfer and fMRISurface
     if not rpool.check_rpool('space-fsLR_den-32k_bold.dtseries'):
@@ -1473,11 +1479,22 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
     try:
         wf = connect_pipeline(wf, cfg, rpool, pipeline_blocks)
     except LookupError as lookup_error:
-        errorstrings = lookup_error.args[0].split('\n')
-        missing_key = errorstrings[
-            errorstrings.index('[!] C-PAC says: The listed resource is not '
-                               'in the resource pool:') + 1]
-        if missing_key.endswith('_bold') and 'func' not in sub_dict:
+        missing_key = None
+        errorstrings = [arg for arg in lookup_error.args[0].split('\n') if
+                        arg.strip()]
+        if lookup_error.args[0].startswith('When trying to connect node b'):
+            missing_key = lookup_error.args[0].split("': ")[-1]
+        for errorstring in [
+            '[!] C-PAC says: The listed resource is not in the resource pool:',
+            '[!] C-PAC says: None of the listed resources are in the resource '
+            'pool:',
+            '[!] C-PAC says: None of the listed resources in the node block '
+            'being connected exist in the resource pool.\n\nResources:'
+        ]:
+            if errorstring in lookup_error.args[0]:
+                missing_key = errorstrings[errorstrings.index(errorstring) + 1]
+        if missing_key and missing_key.endswith('_bold'
+                                                ) and 'func' not in sub_dict:
             raise FileNotFoundError(
                 'The provided pipeline configuration requires functional '
                 'data but no functional data were found for ' +

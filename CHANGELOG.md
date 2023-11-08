@@ -20,12 +20,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Some automatic handling of user-provided BIDSy atlas names.
 - `sig_imports` static method decorator for `Function` nodes, to accommodate type hinting in signatures of `Function` node functions.
+- Ability to ingress an fmriprep output directory and run derivatives with C-PAC
+- fmriprep-ingress preconfig that runs derivatives
+- String representations for NodeBlock and ResourcePool class instances
+- `switch_is_off`, `switch_is_on` and `switch_is_on_off` methods to `Configuration` class
+- `__repr__` and `__str__` methods to `ResourcePool`s and `NodeBlockFunction`s
 
 ## Fixed
 
 - Fixed a bug where some connectivity matrices wouldn't generate if anatomical and functional outputs were in different resolutions.
 - Handling of `3dECM` outputs for AFNI ≥ 21.1.1.
 - Fixed a bug where sparsity thresholds were not being scaled for network centrality.
+- Fixed a bug where `calculate_motion_first` would not calculate motion at all.
 
 ### Changed
 
@@ -36,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Disabled `--use-estimate-learning-rate-once` in `antsRegistration` (ANTsX/ANTs#1405; ANTsX/ANTs#1411)
 - Removes `torch` from preinstalled dependencies and only installs if we're running `unet`
 - Uses highest resolution available locally as reference when resampling a template to a non-packaged resolution (was always using 1mm reference before)
+- Updates config boolean validation from anything-truthy-is-True (e.g., `[True, False]`, or `[False]`, or a typo like `Offf`) to only accepting bools, ints, and YAML boolean strings like "On" and "Off" as boolean
+- When applying a filter to motion parameters, now C-PAC reports both the original and the filtered motion parameters and uses the original parameters for qc. Previous versions only reported the filtered parameters and used the filtered parameters for qc.
 
 ### Added dependencies
 
@@ -131,7 +139,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated some output filenaming conventions for human-readability and to move closer to BIDS-derivatives compliance
 - Changed motion filter from single dictionary to list of dictionaries
 - Changed CI logic to allow non-release tags
-- When applying a filter to motion parameters, now C-PAC reports both the original and the filtered motion parameters and uses the original parameters for qc. Previous versions only reported the filtered parameters and used the filtered parameters for qc.
 
 ### Upgraded dependencies
 
