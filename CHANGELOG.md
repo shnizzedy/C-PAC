@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handling of `3dECM` outputs for AFNI ≥ 21.1.1.
 - Fixed a bug where sparsity thresholds were not being scaled for network centrality.
 - Fixed a bug where `calculate_motion_first` would not calculate motion at all.
+- Fixed a bug in parsing `FROM: /file/path` syntax
 
 ### Changed
 
@@ -44,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Uses highest resolution available locally as reference when resampling a template to a non-packaged resolution (was always using 1mm reference before)
 - Updates config boolean validation from anything-truthy-is-True (e.g., `[True, False]`, or `[False]`, or a typo like `Offf`) to only accepting bools, ints, and YAML boolean strings like "On" and "Off" as boolean
 - When applying a filter to motion parameters, now C-PAC reports both the original and the filtered motion parameters and uses the original parameters for qc. Previous versions only reported the filtered parameters and used the filtered parameters for qc.
+- Makes nuisance regression space non-forkable. In v1.8.5, nuisance regression forking was broken, so this change should not cause backwards-compatibility issues.
 
 ### Added dependencies
 
@@ -63,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgraded dependencies
 
-- `AFNI` 21.1.00 'Domitian' → 23.1.10 'Publius Helvius Pertinax'
+- `AFNI` 21.1.00 'Domitian' → 23.3.09 'Septimius Severus'
 - `ANTs` 2.3.3 'Leptomyrmex' → 2.4.3 'Emplastus'
 - `boto3` 1.7.37 → 1.28.4
 - `click` 6.7 → 8.1.5

@@ -22,11 +22,11 @@ from itertools import chain, permutations
 import numpy as np
 from pathvalidate import sanitize_filename
 from voluptuous import All, ALLOW_EXTRA, Any, BooleanInvalid, Capitalize, \
-                       Coerce, ExclusiveInvalid, In, Length, LengthInvalid, \
-                       Lower, Match, Maybe, Optional, Range, Required, \
-                       Schema, Title
+                       Coerce, CoerceInvalid, ExclusiveInvalid, In, Length, \
+                       LengthInvalid, Lower, Match, Maybe, MultipleInvalid, \
+                       Optional, Range, Required, Schema, Title
 from CPAC import docs_prefix
-from CPAC.utils.datatypes import ListFromItem
+from CPAC.utils.datatypes import ItemFromList, ListFromItem
 from CPAC.utils.utils import YAML_BOOLS
 
 # 1 or more digits, optional decimal, 'e', optional '-', 1 or more digits
@@ -134,6 +134,8 @@ valid_options = {
     },
     'target_space': ['Native', 'Template']
 }
+valid_options['space'] = list({option.lower() for option in
+                               valid_options['target_space']})
 mutex = {  # mutually exclusive booleans
     'FSL-BET': {
         # exactly zero or one of each of the following can be True for FSL-BET
@@ -886,8 +888,8 @@ latest_schema = Schema({
         },
         '2-nuisance_regression': {
             'run': forkable,
-            'space': All(Coerce(ListFromItem),
-                         [All(Lower, In({'native', 'template'}))]),
+            'space': All(Coerce(ItemFromList),
+                         Lower, In({'native', 'template'})),
             'create_regressors': bool1_1,
             'ingress_regressors': {
                 'run': bool1_1,
@@ -1096,7 +1098,18 @@ def schema(config_dict):
     dict
     '''
     from CPAC.utils.utils import _changes_1_8_0_to_1_8_1
-    partially_validated = latest_schema(_changes_1_8_0_to_1_8_1(config_dict))
+    try:
+        partially_validated = latest_schema(
+            _changes_1_8_0_to_1_8_1(config_dict))
+    except MultipleInvalid as multiple_invalid:
+        if (multiple_invalid.path == ['nuisance_corrections',
+                                      '2-nuisance_regression', 'space'] and
+                isinstance(multiple_invalid.errors[0], CoerceInvalid)):
+            raise CoerceInvalid(
+                'Nusiance regression space is not forkable. Please choose '
+                f'only one of {valid_options["space"]}',
+                path=multiple_invalid.path) from multiple_invalid
+        raise multiple_invalid
     try:
         if (partially_validated['registration_workflows'][
             'functional_registration'
@@ -1110,7 +1123,7 @@ def schema(config_dict):
             if True in partially_validated['nuisance_corrections'][
                 '2-nuisance_regression']['run'] and partially_validated[
                 'nuisance_corrections'
-            ]['2-nuisance_regression']['space'] != ['template']:
+            ]['2-nuisance_regression']['space'] != 'template':
                 raise ExclusiveInvalid(
                     '``single_step_resampling_from_stc`` requires '
                     'template-space nuisance regression. Either set '
@@ -1167,6 +1180,23 @@ def schema(config_dict):
             raise ExclusiveInvalid(
                 "[!] Ingress_regressors and create_regressors can't both run! "
                 " Try turning one option off.\n ")
+    except KeyError:
+        pass
+    try:
+        if 'unet' in [using.lower() for using in
+                      partially_validated['anatomical_preproc'][
+                          'brain_extraction']['using']]:
+            try:
+                from importlib import import_module
+                import_module('CPAC.unet')
+            except (ImportError, ModuleNotFoundError, OSError) as error:
+                import site
+                raise OSError(
+                    'U-Net brain extraction requires torch to be installed, '
+                    'but the installation path in this container is '
+                    'read-only. Please bind a local writable path to '
+                    f'"{site.USER_BASE}" in the container to use U-Net.'
+                ) from error
     except KeyError:
         pass
     return partially_validated

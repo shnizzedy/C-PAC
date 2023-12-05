@@ -40,7 +40,7 @@ from CPAC.utils.monitoring import failed_to_start, log_nodes_cb
 from CPAC.utils.configuration.yaml_template import create_yaml_from_template, \
                                                    hash_data_config, \
                                                    upgrade_pipeline_to_1_8
-from CPAC.utils.utils import load_preconfig, update_nested_dict
+from CPAC.utils.utils import update_nested_dict
 simplefilter(action='ignore', category=FutureWarning)
 logger = logging.getLogger('nipype.workflow')
 DEFAULT_TMP_DIR = "/tmp"
@@ -361,6 +361,7 @@ def run_main():
     output_dir_is_s3 = args.output_dir.lower().startswith("s3://")
     output_dir = args.output_dir if output_dir_is_s3 else os.path.realpath(
         args.output_dir)
+    os.environ["CPAC_WORKDIR"] = output_dir
     exitcode = 0
     if args.analysis_level == "cli":
         from CPAC.__main__ import main
@@ -460,11 +461,14 @@ def run_main():
                 run(f"bids-validator {bids_dir}")
 
         if args.preconfig:
-            args.pipeline_file = load_preconfig(args.preconfig)
+            args.pipeline_file = preconfig_yaml(args.preconfig)
 
         # otherwise, if we are running group, participant, or dry run we
         # begin by conforming the configuration
-        c = load_yaml_config(args.pipeline_file, args.aws_input_creds)
+        if isinstance(args.pipeline_file, dict):
+            c = args.pipeline_file
+        else:
+            c = load_yaml_config(args.pipeline_file, args.aws_input_creds)
 
         if 'pipeline_setup' not in c:
             _url = (f'{DOCS_URL_PREFIX}/user/pipelines/'

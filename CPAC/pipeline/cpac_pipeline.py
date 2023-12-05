@@ -106,7 +106,6 @@ from CPAC.registration.registration import (
     warp_sbref_to_T1template,
     warp_bold_mask_to_T1template,
     warp_deriv_mask_to_T1template,
-    warp_denoiseNofilt_to_T1template,
     warp_timeseries_to_EPItemplate,
     warp_bold_mean_to_EPItemplate,
     warp_bold_mask_to_EPItemplate,
@@ -229,6 +228,17 @@ logger = getLogger('nipype.workflow')
 faulthandler.enable()
 
 # config.enable_debug_mode()
+
+
+def log_torch_install() -> str:
+    '''Generate a log message about torch installation, if relevant'''
+    install_root = os.environ.get('TORCH_INSTALL_ROOT')
+    if install_root:
+        return (f'\n\ntorch was installed in {install_root} within the '
+                'C-PAC container for U-Net. If that path persists when the '
+                'container is removed, please check that the installation '
+                'was successfully removed.')
+    return ''
 
 
 def run_workflow(sub_dict, c, run, pipeline_timing_info=None, p_name=None,
@@ -394,7 +404,7 @@ def run_workflow(sub_dict, c, run, pipeline_timing_info=None, p_name=None,
         Timing information saved in {log_dir}/cpac_individual_timing_{pipeline}.csv
         System time of start:      {run_start}
         System time of completion: {run_finish}
-        {output_check}
+        {output_check}{torch_installed}
 """  # noqa: E501
 
     logger.info('%s', information.format(
@@ -765,7 +775,7 @@ CPAC run error:
     Elapsed run time (minutes): {elapsed}
     Timing information saved in {log_dir}/cpac_individual_timing_{pipeline}.csv
     System time of start:      {run_start}
-    {output_check}
+    {output_check}{torch_installed}
 """
 
         finally:
@@ -785,8 +795,8 @@ CPAC run error:
                     output_check=check_outputs(
                                  c.pipeline_setup['output_directory']['path'],
                                  log_dir, c.pipeline_setup['pipeline_name'],
-                                 c['subject_id'])
-                ))
+                                 c['subject_id']),
+                    torch_installed=log_torch_install()))
 
                 if workflow_result is not None:
                     workflow_meta.stage = "post"
@@ -801,16 +811,28 @@ CPAC run error:
                 # Remove working directory when done
                 if c.pipeline_setup['working_directory'][
                     'remove_working_dir']:
-                    try:
-                        if os.path.exists(working_dir):
-                            logger.info("Removing working dir: %s",
-                                        working_dir)
-                            shutil.rmtree(working_dir)
-                    except (FileNotFoundError, PermissionError):
-                        logger.warning(
-                            'Could not remove working directory %s',
-                            working_dir
-                        )
+                    remove_workdir(working_dir)
+                # Remove just .local from working directory
+                else:
+                    remove_workdir(os.path.join(os.environ["CPAC_WORKDIR"],
+                                                '.local'))
+
+
+def remove_workdir(wdpath: str) -> None:
+    """Remove a given working directory if possible, warn if impossible
+
+    Parameters
+    ----------
+    wdpath : str
+        path to working directory to remove
+    """
+    try:
+        if os.path.exists(wdpath):
+            logger.info("Removing working dir: %s", wdpath)
+            shutil.rmtree(wdpath)
+    except (FileNotFoundError, PermissionError):
+        logger.warning(
+            'Could not remove working directory %s', wdpath)
 
 
 def initialize_nipype_wf(cfg, sub_data_dct, name=""):
@@ -1356,7 +1378,7 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
 
     pipeline_blocks += [func_despike_template]
 
-    if 'Template' in target_space_alff and 'Native' in target_space_nuis:
+    if 'Template' in target_space_alff and target_space_nuis == 'native':
         pipeline_blocks += [warp_denoiseNofilt_to_T1template]
 
     template = cfg.registration_workflows['functional_registration'][
@@ -1392,9 +1414,8 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
                             warp_deriv_mask_to_EPItemplate]
 
     # Template-space nuisance regression
-    nuisance_template = 'template' in cfg[
-        'nuisance_corrections', '2-nuisance_regression', 'space'
-    ] and not generate_only
+    nuisance_template = (cfg['nuisance_corrections', '2-nuisance_regression',
+                             'space'] == 'template') and (not generate_only)
     if nuisance_template:
         pipeline_blocks += [nuisance_regression_template]
         # pipeline_blocks += [(nuisance_regression_template,
@@ -1439,9 +1460,6 @@ def build_workflow(subject_id, sub_dict, cfg, pipeline_name=None,
             pipeline_blocks += [alff_falff]
 
     if 'Template' in target_space_alff:
-        if not nuisance_template and not rpool.check_rpool(
-                'space-template_desc-denoisedNofilt_bold'):
-            pipeline_blocks += [warp_denoiseNofilt_to_T1template]
         if not rpool.check_rpool('space-template_alff'):
             pipeline_blocks += [alff_falff_space_template]
 
