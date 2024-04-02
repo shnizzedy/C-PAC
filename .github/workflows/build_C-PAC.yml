@@ -8,8 +8,31 @@ on:
         type: string
 
 jobs:
+  variant_check:
+    name: Build this variant?
+    outputs:
+      build: ${{ steps.build-this-variant.outputs.build }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out C-PAC
+        uses: actions/checkout@v3
+      - id: build-this-variant
+        name: Build this variant?
+        run: |
+          if [[ "${{ inputs.variant }}" == "" ]]
+          then
+            BUILD=true
+          else
+            pip install nipype
+            BUILD=`python -c "from CPAC.info import VARIANTS; print(str(\"${{ inputs.variant }}\" in VARIANTS).lower())"`
+          fi
+          echo "build=${BUILD}" >> $GITHUB_OUTPUT
+        
   C-PAC:
     name: Build Docker C-PAC images
+    if: ${{ needs.variant_check.outputs.build == true }}
+    needs:
+      - variant_check
     runs-on: ubuntu-latest
     steps:
       - name: Maximize build space

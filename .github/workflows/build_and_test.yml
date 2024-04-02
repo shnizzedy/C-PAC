@@ -336,7 +336,7 @@ jobs:
       - C-PAC-lite
       - C-PAC-ABCD-HCP
       - C-PAC-fMRIPrep-LTS
-    if: github.ref_name == 'develop' || github.ref_name == 'main'
+    if: ${{ (github.ref_name == 'develop' || github.ref_name == 'main') && always() }}
     uses: ./.github/workflows/smoke_test_participant.yml
 
   regtest-lite:
@@ -360,7 +360,7 @@ jobs:
       - C-PAC-lite
       - C-PAC-ABCD-HCP
       - C-PAC-fMRIPrep-LTS
-    if: github.ref_type == 'branch'
+    if: ${{ github.ref_type == 'branch' && always() }}
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
@@ -419,7 +419,7 @@ jobs:
     name: Deploy 'lite' to Docker Hub
     needs:
       - C-PAC-lite
-    if: github.ref_type == 'tag'
+    if: ${{ github.ref_type == 'tag' && always() }}
     uses: ./.github/workflows/deploy_to_Docker_Hub.yml
     with:
       variant: 'lite'
