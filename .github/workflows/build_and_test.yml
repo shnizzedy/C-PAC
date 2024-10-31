@@ -317,17 +317,17 @@ jobs:
     with:
       variant: lite
 
-  # C-PAC-ABCD-HCP:
-  #   needs: build-base
-  #   uses: ./.github/workflows/build_C-PAC.yml
-  #   with:
-  #     variant: ABCD-HCP
+  C-PAC-ABCD-HCP:
+    needs: build-base
+    uses: ./.github/workflows/build_C-PAC.yml
+    with:
+      variant: ABCD-HCP
 
-  # C-PAC-fMRIPrep-LTS:
-  #   needs: build-base
-  #   uses: ./.github/workflows/build_C-PAC.yml
-  #   with:
-  #     variant: fMRIPrep-LTS
+  C-PAC-fMRIPrep-LTS:
+    needs: build-base
+    uses: ./.github/workflows/build_C-PAC.yml
+    with:
+      variant: fMRIPrep-LTS
 
   smoke-tests-participant:
     name: Run participant-level smoke tests
