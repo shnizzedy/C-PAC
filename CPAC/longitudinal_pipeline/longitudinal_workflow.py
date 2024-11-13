@@ -51,6 +51,8 @@ from CPAC.utils.utils import check_config_resources, check_prov_for_regtool
     name="mask_T1w_longitudinal_template",
     config=["longitudinal_template_generation"],
     switch=["run"],
+    option_key="using",
+    option_val="C-PAC legacy",
     inputs=["desc-brain_T1w"],
     outputs=["space-T1w_desc-brain_mask"],
 )
@@ -223,6 +225,8 @@ def select_session(session, output_brains, warps):
     name="mask_longitudinal_T1w_brain",
     config=["longitudinal_template_generation"],
     switch=["run"],
+    option_key="using",
+    option_val="C-PAC legacy",
     inputs=["space-longitudinal_desc-brain_T1w"],
     outputs=["space-longitudinal_desc-brain_mask"],
 )
@@ -245,6 +249,8 @@ def mask_longitudinal_T1w_brain(wf, cfg, strat_pool, pipe_num, opt=None):
     name="warp_longitudinal_T1w_to_template",
     config=["longitudinal_template_generation"],
     switch=["run"],
+    option_key="using",
+    option_val="C-PAC legacy",
     inputs=[
         (
             "space-longitudinal_desc-brain_T1w",
@@ -298,6 +304,8 @@ def warp_longitudinal_T1w_to_template(wf, cfg, strat_pool, pipe_num, opt=None):
     name="warp_longitudinal_seg_to_T1w",
     config=["longitudinal_template_generation"],
     switch=["run"],
+    option_key="using",
+    option_val="C-PAC legacy",
     inputs=[
         (
             "from-longitudinal_to-T1w_mode-image_desc-linear_xfm",
@@ -494,12 +502,14 @@ def anat_longitudinal_wf(subject_id, sub_list, config):
         template_node.inputs.set(
             avg_method=config.longitudinal_template_generation["average_method"],
             dof=config.longitudinal_template_generation["dof"],
-            interp=config.longitudinal_template_generation["interp"],
-            cost=config.longitudinal_template_generation["cost"],
+            interp=config.longitudinal_template_generation["legacy-specific"]["interp"],
+            cost=config.longitudinal_template_generation["legacy-specific"]["cost"],
             convergence_threshold=config.longitudinal_template_generation[
                 "convergence_threshold"
             ],
-            thread_pool=config.longitudinal_template_generation["thread_pool"],
+            thread_pool=config.longitudinal_template_generation["legacy-specific"][
+                "thread_pool"
+            ],
             unique_id_list=list(session_wfs.keys()),
         )
 
