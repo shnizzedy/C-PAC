@@ -32,7 +32,6 @@ from unittest.mock import patch
 from traits.trait_errors import TraitError
 import yaml
 
-from CPAC.pipeline.engine import template_dataframe
 from CPAC.pipeline.nodeblock import NodeBlockFunction
 from CPAC.utils.monitoring import UTLOGGER
 from CPAC.utils.outputs import Outputs
@@ -91,7 +90,7 @@ class ResourceSourceList:
 
     sources: list[str] = field(default_factory=list)
 
-    def __add__(self, other: str | list[str]) -> list[str]:
+    def __add__(self, other: "str | list[str] | ResourceSourceList") -> list[str]:
         """Add a list of sources to the list."""
         if isinstance(other, str):
             other = [other]
@@ -118,7 +117,9 @@ class ResourceSourceList:
         """Get the hash of the list of sources."""
         return hash(self.sources)
 
-    def __iadd__(self, other: str | list[str]) -> "ResourceSourceList":
+    def __iadd__(
+        self, other: "str | list[str] | ResourceSourceList"
+    ) -> "ResourceSourceList":
         """Add a list of sources to the list."""
         self.sources = self + other
         return self
@@ -150,6 +151,189 @@ class ResourceSourceList:
     def __str__(self) -> str:
         """Get the string representation of the sources."""
         return str(self.sources)
+
+
+class DirectlySetResources(ast.NodeVisitor):
+    """Gather resources directly set (rather than in NodeBlocks)."""
+
+    def __init__(self) -> None:
+        """Initialize the visitor."""
+        super().__init__()
+        self._context: dict[str, Any] = {}
+        self._history: dict[str, list[Any]] = {}
+        self.resources: dict[str, ResourceSourceList] = {}
+
+    @property
+    def context(self) -> dict[str, Any]:
+        """Return the context."""
+        return self._context
+
+    @context.setter
+    def context(self, value: tuple[str, Any]) -> None:
+        """Set the context."""
+        key, _value = value
+        self._context[key] = _value
+        if key not in self._history:
+            self._history[key] = []
+        self._history[key].append(_value)
+
+    def assign_resource(self, resource: str, value: str) -> None:
+        """Assign a value to a resource."""
+        if resource not in self.resources:
+            self.resources[resource] = ResourceSourceList()
+        self.resources[resource] += value
+
+    def ast_to_str(self, abstract: ast.AST) -> str:
+        """Return a string representation of an AST."""
+        if isinstance(abstract, ast.FormattedValue):
+            value_id = getattr(abstract.value, "id", self.ast_to_str(abstract.value))
+            if value_id in self.context:
+                value = self.context[value_id]
+                if isinstance(value, ast.AST):
+                    if hasattr(value, "values"):
+                        for subvalue in getattr(value, "values", []):
+                            if hasattr(subvalue, "value"):
+                                if (
+                                    self.ast_to_str(
+                                        getattr(subvalue, "value", subvalue)
+                                    )
+                                    == value_id
+                                ):
+                                    value = self.ast_to_str(self._history[value_id][-2])
+            else:
+                value = value_id
+            if isinstance(value, ast.AST):
+                value = self.ast_to_str(value)
+            return value
+        if isinstance(abstract, ast.Call):
+            _func = getattr(abstract, "func")
+            if hasattr(_func, "attr") and bool(getattr(_func, "attr", False)):
+                if hasattr(_func, "value") and hasattr(_func.value, "id"):
+                    _func = ".".join([_func.value.id, _func.attr])
+                else:
+                    _func = self.ast_to_str(_func)
+            return (
+                f"{_func}({', '.join(self.ast_to_str(arg) for arg in abstract.args)})"
+            )
+        if hasattr(abstract, "values"):
+            return "".join(
+                self.ast_to_str(value) for value in getattr(abstract, "values")
+            )
+        if hasattr(abstract, "value"):
+            value = getattr(abstract, "value")
+            if isinstance(value, ast.AST):
+                return self.ast_to_str(value)
+            if isinstance(value, str):
+                return value
+        if hasattr(abstract, "id"):
+            return getattr(abstract, "id")
+        return str(abstract)
+
+    def resolve_fstring(self, fstring_node: ast.AST, context: dict[str, str]) -> str:
+        """Resolve an f-string into a template with placeholders."""
+        parts = []
+        for part in fstring_node.values:
+            if isinstance(part, ast.Constant):
+                parts.append(part.value)
+            elif isinstance(part, ast.FormattedValue):
+                if isinstance(part.value, ast.Name):
+                    parts.append(context.get(part.value.id, f"{{{part.value.id}}}"))
+        return "".join(parts)
+
+    def visit_Assign(self, node) -> None:
+        """Visit an assignment."""
+        if isinstance(node.value, ast.Dict):
+            for key, value in dict(
+                zip(
+                    [self.ast_to_str(k) for k in node.value.keys],
+                    [
+                        self.ast_to_str(v.elts[0] if isinstance(v, ast.Tuple) else v)
+                        for v in node.value.values
+                    ],
+                )
+            ).items():
+                self.context = str(key), str(value)
+
+    def visit_For(self, node) -> None:
+        """Visit for loops."""
+        if isinstance(node.iter, ast.Call) and isinstance(
+            node.iter.func, ast.Attribute
+        ):
+            if (
+                node.iter.func.attr == "items"
+                and self.ast_to_str(node.iter.func) in self.context
+            ):
+                # Extract the dictionary being iterated
+                dictionary = self.context
+
+                # Process the loop body for set_data calls
+                for stmt in node.body:
+                    if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Call):
+                        func_call = stmt.value
+                        if (
+                            isinstance(func_call.func, ast.Attribute)
+                            and func_call.func.attr == "set_data"
+                        ):
+                            # Extract arguments of the set_data call
+                            args = func_call.args
+                            if len(args) > 5 and isinstance(args[5], ast.JoinedStr):
+                                # Resolve the interpolated string
+                                literal_string = self.resolve_fstring(
+                                    args[5], {"key": list(dictionary.keys())}
+                                )
+                                for key in dictionary.keys():
+                                    self.pairings.append(
+                                        (key, literal_string.format(key=key))
+                                    )
+        self.generic_visit(node)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        """Visit a function call."""
+        if isinstance(node.func, ast.Attribute) and node.func.attr == "set_data":
+            if hasattr(node.args[0], "value"):
+                resource: str = getattr(node.args[0], "value")
+            elif hasattr(node.args[0], "id"):
+                resource_id = str(getattr(node.args[0], "id", ""))
+                resource = self.context.get(resource_id, resource_id)
+                if hasattr(resource, "values"):
+                    _r_parts = []
+                    for part in getattr(resource, "values", []):
+                        if hasattr(part, "id"):
+                            _r_parts.append(
+                                self.context.get(part.id, self.ast_to_str(part.id))
+                            )
+                        else:
+                            _formatted = self.ast_to_str(part)
+                            if (
+                                _formatted == resource_id
+                                and len(self._history.get(resource_id, [])) > 1
+                            ):
+                                _formatted = f"{{{self.ast_to_str(self._history[resource_id][-2])}}}"
+                            _r_parts.append(_formatted)
+                    resource = "".join(_r_parts)
+                if isinstance(resource, ast.Call):
+                    resource_id: str = getattr(
+                        getattr(resource.func, "value", ""),
+                        "id",
+                        self.ast_to_str(resource),
+                    )
+                    if resource_id in self.context:
+                        resource_id = self.context[resource_id]
+                        if isinstance(resource_id, ast.AST):
+                            resource_id = self.ast_to_str(resource_id)
+                        resource_id = f"{{{resource_id}}}"
+                    resource = f"{resource_id}.{getattr(resource.func, 'attr', resource_id)}({', '.join(self.ast_to_str(arg) for arg in resource.args)})"
+            else:
+                return
+            if not isinstance(resource, str):
+                breakpoint()
+                return
+                # resource = self.ast_to_str(resource)
+                # if resource in self.context:
+                #     resource = self.context[resource]
+            self.assign_resource(resource, self.ast_to_str(node.args[5]))
+            # breakpoint()
+        self.generic_visit(node)
 
 
 @dataclass
@@ -230,7 +414,7 @@ def _flatten_io(io: list[Iterable]) -> list[str]:
     return cast(list[str], io)
 
 
-def find_directly_set_resources(package_name: str) -> dict[str, list[str]]:
+def find_directly_set_resources(package_name: str) -> dict[str, ResourceSourceList]:
     """Find all resources set explicitly via :pyy:method:`~CPAC.pipeline.engine.ResourcePool.set_data`.
 
     Parameters
@@ -243,33 +427,26 @@ def find_directly_set_resources(package_name: str) -> dict[str, list[str]]:
     dict
         A dictionary containing the name of the resource and the name of the functions that set it.
     """
-    resources: dict[str[list[str]]] = {}
+    resources: dict[str, ResourceSourceList] = {}
     for dirpath, _, filenames in os.walk(str(files(package_name))):
         for filename in filenames:
             if filename.endswith(".py"):
                 filepath = os.path.join(dirpath, filename)
                 with open(filepath, "r", encoding="utf-8") as file:
                     tree = ast.parse(file.read(), filename=filepath)
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.Call) and isinstance(
-                            node.func, ast.Attribute
-                        ):
-                            if node.func.attr == "set_data":
-                                try:
-                                    resource: str = ast.literal_eval(node.args[0])
-                                    if resource not in resources:
-                                        resources[resource] = []
-                                    resources[resource].append(
-                                        ast.literal_eval(node.args[-1])
-                                    )
-                                except ValueError:
-                                    # The resource name or function name is not a literal, so this `set_data` is a dynamic call
-                                    pass
+                    directly_set = DirectlySetResources()
+                    directly_set.visit(tree)
+                    for resource in directly_set.resources:
+                        if resource not in resources:
+                            resources[resource] = ResourceSourceList()
+                        resources[resource] += directly_set.resources[resource]
     return resources
 
 
 def resource_inventory(package: str = "CPAC") -> dict[str, ResourceIO]:
     """Gather all inputs and outputs for a list of NodeBlockFunctions."""
+    from CPAC.pipeline.engine import template_dataframe
+
     resources: dict[str, ResourceIO] = {}
     # Node block function inputs and outputs
     for nbf in import_nodeblock_functions(
@@ -313,6 +490,7 @@ def resource_inventory(package: str = "CPAC") -> dict[str, ResourceIO]:
             resources[resource] = ResourceIO(resource, output_from=functions)
         else:
             resources[resource].output_from += functions
+    # breakpoint()
     # Outputs
     for _, row in Outputs.reference.iterrows():
         if row.Resource not in resources:
