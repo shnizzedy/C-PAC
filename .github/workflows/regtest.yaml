@@ -79,7 +79,7 @@ jobs:
           ssh-keyscan -H -t rsa "${{ env.SSH_HOST }}" > ~/.ssh/known_hosts
 
       - name: Connect and Run Regression Test ${{ inputs.test_mode }}
-        uses: appleboy/ssh-action@v1.0.0
+        uses: appleboy/ssh-action@v1.2.1
         with:
           host: ${{ env.SSH_HOST }}
           username: ${{ env.SSH_USER }}
