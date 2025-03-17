@@ -36,7 +36,7 @@ jobs:
         with:
           fetch-depth: 2
       - name: Get changed files since last commit
-        uses: tj-actions/changed-files@v45.0.7
+        uses: tj-actions/changed-files@v46.0.1
         id: changed-files
         with:
           since_last_remote_commit: "true"
@@ -113,7 +113,7 @@ jobs:
       test_mode: ${{ steps.check_pr.outputs.test_mode }}
     steps:
       - name: Check out C-PAC
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - name: Check if commit is in a PR to develop
