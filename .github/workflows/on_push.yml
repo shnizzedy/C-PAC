@@ -20,6 +20,7 @@ permissions:
   contents: read
   packages: write
   pull-requests: read
+  id-token: write
 
 on:
   push:
