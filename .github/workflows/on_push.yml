@@ -16,7 +16,10 @@
 # License along with C-PAC. If not, see <https://www.gnu.org/licenses/>.
 name: Build and test C-PAC
 
-permissions: read-all
+permissions:
+  contents: read
+  packages: write
+  pull-requests: read
 
 on:
   push:
