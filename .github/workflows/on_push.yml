@@ -17,10 +17,13 @@
 name: Build and test C-PAC
 
 permissions:
+  checks: write
   contents: read
+  deployments: write
+  issues: write
   packages: write
-  pull-requests: read
-  id-token: write
+  pull-requests: write
+  statuses: write
 
 on:
   push:
