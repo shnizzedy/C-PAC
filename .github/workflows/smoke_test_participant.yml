@@ -154,7 +154,7 @@ jobs:
           echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           cat $GITHUB_ENV
       - name: setup-conda
-        uses: conda-incubator/setup-miniconda@v3.1.1
+        uses: conda-incubator/setup-miniconda@v3.2.0
       - name: Set up datalad-OSF
         run: |
           sudo apt-get update && sudo apt-get install -y git-annex
@@ -213,7 +213,7 @@ jobs:
           echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           cat $GITHUB_ENV
       - name: setup-conda
-        uses: conda-incubator/setup-miniconda@v3.1.1
+        uses: conda-incubator/setup-miniconda@v3.2.0
         with:
           activate-environment: datalad-osf
           channels: conda-forge
