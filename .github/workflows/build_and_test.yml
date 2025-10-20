@@ -64,7 +64,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Set tag & see if it exists
@@ -86,7 +86,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Set up Docker Buildx
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/setup-buildx-action@v3.9.0
+        uses: docker/setup-buildx-action@v3.11.1
       - name: Log in to GitHub Container Registry
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
         uses: docker/login-action@v3
@@ -96,7 +96,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/build-push-action@v6.13.0
+        uses: docker/build-push-action@v6.18.0
         with:
           file: .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
           push: true
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Set tag & see if it exists
@@ -146,7 +146,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Set up Docker Buildx
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/setup-buildx-action@v3.9.0
+        uses: docker/setup-buildx-action@v3.11.1
       - name: Log in to GitHub Container Registry
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
         uses: docker/login-action@v3
@@ -156,7 +156,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push Docker image
         if: contains(fromJSON(env.REBUILD), matrix.Dockerfile) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/build-push-action@v6.13.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: .
           file: .github/Dockerfiles/${{ matrix.Dockerfile }}.Dockerfile
@@ -185,7 +185,7 @@ jobs:
           remove-haskell: 'true'
           overprovision-lvm: 'true'
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Prep source files
@@ -221,7 +221,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Set up Docker Buildx
         if: contains(fromJSON(env.REBUILD), matrix.variant) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/setup-buildx-action@v3.9.0
+        uses: docker/setup-buildx-action@v3.11.1
       - name: Log in to GitHub Container Registry
         if: contains(fromJSON(env.REBUILD), matrix.variant) || steps.docker_tag.outputs.not_yet_exists == 1
         uses: docker/login-action@v3
@@ -231,7 +231,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push base image
         if: contains(fromJSON(env.REBUILD), matrix.variant) || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/build-push-action@v6.13.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: .
           file: .github/Dockerfiles/base-${{ matrix.variant }}.Dockerfile
@@ -257,7 +257,7 @@ jobs:
           remove-haskell: 'true'
           overprovision-lvm: 'true'
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Prep source files
@@ -293,7 +293,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
       - name: Set up Docker Buildx
         if: contains(fromJSON(env.REBUILD), 'standard') || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/setup-buildx-action@v3.9.0
+        uses: docker/setup-buildx-action@v3.11.1
       - name: Log in to GitHub Container Registry
         if: contains(fromJSON(env.REBUILD), 'standard') || steps.docker_tag.outputs.not_yet_exists == 1
         uses: docker/login-action@v3
@@ -303,7 +303,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push base image
         if: contains(fromJSON(env.REBUILD), 'standard') || steps.docker_tag.outputs.not_yet_exists == 1
-        uses: docker/build-push-action@v6.13.0
+        uses: docker/build-push-action@v6.18.0
         with:
           context: .
           file: .github/Dockerfiles/base-standard.Dockerfile
@@ -356,7 +356,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - name: Trigger CircleCI tests
