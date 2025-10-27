@@ -23,7 +23,7 @@ jobs:
       IMAGE: c-pac
     steps:
       - name: Check out C-PAC
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: 'Delete branch image'
         continue-on-error: true
         run: |

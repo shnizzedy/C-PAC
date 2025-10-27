@@ -113,7 +113,7 @@ jobs:
             --participant_label ${{ matrix.participant }} \
             --preconfig ${{ matrix.preconfig }} \
             --n_cpus 2
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: expectedOutputs human ${{ matrix.preconfig }} ${{ matrix.variant }} ${{ matrix.participant }}
@@ -154,7 +154,7 @@ jobs:
           echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           cat $GITHUB_ENV
       - name: setup-conda
-        uses: conda-incubator/setup-miniconda@v3.1.1
+        uses: conda-incubator/setup-miniconda@v3.2.0
       - name: Set up datalad-OSF
         run: |
           sudo apt-get update && sudo apt-get install -y git-annex
@@ -177,7 +177,7 @@ jobs:
             --preconfig ${{ matrix.preconfig }} \
             --participant_label ${{ matrix.participant }} \
             --n_cpus 2
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: expectedOutputs nhp ${{ matrix.preconfig }} ${{ matrix.variant }} ${{ matrix.participant }}
@@ -213,7 +213,7 @@ jobs:
           echo DOCKER_TAG=$(echo "ghcr.io/${{ github.repository }}" | tr '[:upper:]' '[:lower:]'):$TAG >> $GITHUB_ENV
           cat $GITHUB_ENV
       - name: setup-conda
-        uses: conda-incubator/setup-miniconda@v3.1.1
+        uses: conda-incubator/setup-miniconda@v3.2.0
         with:
           activate-environment: datalad-osf
           channels: conda-forge
@@ -242,7 +242,7 @@ jobs:
             /test-data /outputs test_config \
             --preconfig rodent \
             --n_cpus 2
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: expectedOutputs rodent ${{ matrix.variant }}
